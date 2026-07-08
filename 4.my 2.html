@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>语义解压 - 我的台账</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ========================================
+       V4 实体玻璃工业设计令牌 (Physical Glass Tokens)
+       ======================================== */
+    :root {
+      --color-bg-body: #ECE9E2;
+      --glass-panel: rgba(220, 216, 206, 0.65);
+      --glass-module: rgba(244, 241, 235, 0.4);
+      --glass-border: rgba(255, 255, 255, 0.5);
+      
+      --color-border-dark: rgba(0,0,0,0.15);
+      --color-text-title: #111110;
+      --color-text-primary: #2C2A28;
+      --color-text-secondary: #706D66;
+      --color-accent-primary: #D13E14;
+
+      --font-sans: 'Noto Sans SC', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      --lcd-bg: rgba(26, 29, 26, 0.9);
+      --lcd-text-bright: #66FF88;
+      --lcd-text-dim: #4B5E4B;
+      
+      --led-off: #2C2C2C;
+      --led-amber: #FFB340;
+
+      --shadow-panel: 0 30px 60px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.02);
+      --shadow-emboss: inset 0 1px 0 rgba(255,255,255,0.6), 0 4px 10px rgba(0,0,0,0.03);
+      --shadow-recess: inset 0 2px 5px rgba(0,0,0,0.1);
+      
+      --blur-intensity: blur(15px);
+    }
+
+    body {
+      margin: 0;
+      height: 100vh;
+      background-color: var(--color-bg-body);
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(209, 62, 20, 0.03), transparent 50%),
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
+      font-family: var(--font-sans);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    * { box-sizing: border-box; }
+
+    /* ========================================
+       顶部全局导航
+       ======================================== */
+    .top-bar {
+      height: 48px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 24px;
+      background: var(--glass-panel);
+      backdrop-filter: var(--blur-intensity);
+      -webkit-backdrop-filter: var(--blur-intensity);
+      border-bottom: 1px solid var(--glass-border);
+      z-index: 10;
+    }
+
+    .nameplate {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--color-text-secondary);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .nav-pills { display: flex; gap: 16px; }
+    .nav-pill {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-text-secondary);
+      cursor: pointer;
+      padding: 4px 12px;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+    .nav-pill:hover { background: rgba(0,0,0,0.05); }
+    .nav-pill.active {
+      color: var(--color-accent-primary);
+      background: rgba(209, 62, 20, 0.1);
+      box-shadow: inset 0 1px 2px rgba(209, 62, 20, 0.2);
+    }
+
+    /* ========================================
+       页面主容器
+       ======================================== */
+    .workspace-container {
+      flex: 1;
+      display: flex;
+      padding: 16px 24px 24px 24px;
+      gap: 24px;
+      height: calc(100vh - 48px);
+      max-width: 1440px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .glass-module {
+      background: var(--glass-panel);
+      backdrop-filter: var(--blur-intensity);
+      -webkit-backdrop-filter: var(--blur-intensity);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      box-shadow: var(--shadow-panel);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ========================================
+       左侧：用户状态控制台 (User Profile & Quota)
+       ======================================== */
+    .sidebar {
+      width: 260px;
+      flex-shrink: 0;
+      padding: 24px;
+    }
+
+    .user-avatar-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 32px;
+      padding-bottom: 24px;
+      border-bottom: 1px dashed var(--color-border-dark);
+    }
+
+    .avatar-lcd {
+      width: 64px;
+      height: 64px;
+      background: var(--lcd-bg);
+      border: 2px solid #222;
+      border-radius: 8px;
+      box-shadow: inset 0 2px 6px rgba(0,0,0,0.5), 0 2px 0 rgba(255,255,255,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+    }
+    
+    .avatar-lcd svg {
+      width: 32px;
+      height: 32px;
+      stroke: var(--lcd-text-bright);
+      stroke-width: 1.5;
+      fill: none;
+    }
+
+    .user-name {
+      font-size: 16px;
+      font-weight: 900;
+      color: var(--color-text-title);
+      letter-spacing: 1px;
+    }
+    .user-id {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--color-text-secondary);
+      margin-top: 4px;
+    }
+
+    .sidebar-section-title {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--color-text-secondary);
+      letter-spacing: 0.1em;
+      margin-bottom: 16px;
+    }
+
+    .quota-box {
+      background: rgba(255,255,255,0.3);
+      border: 1px solid rgba(255,255,255,0.5);
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: var(--shadow-emboss);
+      margin-bottom: 16px;
+    }
+    .quota-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--color-text-secondary);
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .quota-val {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: var(--color-text-primary);
+    }
+    
+    .progress-bar {
+      display: flex;
+      gap: 2px;
+      background: rgba(0,0,0,0.05);
+      padding: 2px;
+      border-radius: 2px;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+    }
+    .progress-cell { height: 6px; flex: 1; background: rgba(0,0,0,0.1); border-radius: 1px; }
+    .progress-cell.on { background: var(--color-accent-primary); box-shadow: 0 0 2px var(--color-accent-primary); }
+
+    /* ========================================
+       右侧：台账数据列表区 (Data Log View)
+       ======================================== */
+    .main-content {
+      flex: 1;
+      padding: 24px;
+      overflow-y: auto;
+      scrollbar-width: none;
+    }
+    .main-content::-webkit-scrollbar { display: none; }
+
+    /* 数据区块通用样式 */
+    .data-section {
+      margin-bottom: 40px;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--color-border-dark);
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 900;
+      color: var(--color-text-title);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .section-title::before {
+      content: '';
+      display: block;
+      width: 4px;
+      height: 18px;
+      background: var(--color-accent-primary);
+      border-radius: 2px;
+    }
+
+    .btn-new {
+      background: var(--color-accent-primary);
+      color: white;
+      border: none;
+      padding: 6px 16px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(209, 62, 20, 0.3);
+      transition: all 0.2s;
+    }
+    .btn-new:hover { transform: translateY(-1px); box-shadow: 0 4px 8px rgba(209, 62, 20, 0.4); }
+    .btn-new:active { transform: translateY(1px); box-shadow: none; }
+
+    /* 数据列表 (Table-like Grid) */
+    .data-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .list-header {
+      display: grid;
+      grid-template-columns: 40px 2.5fr 1fr 1.5fr 2fr;
+      padding: 0 16px 8px 16px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--color-text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .list-row {
+      display: grid;
+      grid-template-columns: 40px 2.5fr 1fr 1.5fr 2fr;
+      align-items: center;
+      background: var(--glass-module);
+      border: 1px solid rgba(255,255,255,0.4);
+      padding: 12px 16px;
+      border-radius: 8px;
+      box-shadow: var(--shadow-emboss);
+      transition: all 0.2s;
+    }
+    .list-row:hover {
+      background: rgba(255,255,255,0.6);
+      border-color: rgba(255,255,255,0.8);
+      transform: translateX(2px);
+    }
+
+    /* 复选框 (工业风格) */
+    .checkbox {
+      width: 16px;
+      height: 16px;
+      background: rgba(0,0,0,0.05);
+      border: 1px solid rgba(0,0,0,0.2);
+      border-radius: 3px;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+      cursor: pointer;
+      position: relative;
+    }
+    .checkbox:hover { border-color: var(--color-text-secondary); }
+    
+    .cell-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--color-text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .cell-title svg {
+      width: 16px; height: 16px; stroke: var(--color-accent-primary); fill: none; stroke-width: 2;
+    }
+
+    .cell-time {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--color-text-secondary);
+    }
+
+    /* 10维指纹可视化 (微缩 LED 条) */
+    .cell-fingerprint {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .fp-bar {
+      display: flex;
+      gap: 1px;
+      background: rgba(0,0,0,0.05);
+      padding: 2px;
+      border-radius: 2px;
+    }
+    .fp-led { width: 3px; height: 10px; background: rgba(0,0,0,0.1); }
+    .fp-led.v-high { background: var(--color-accent-primary); }
+    .fp-led.v-mid { background: var(--color-text-secondary); }
+    .fp-led.v-low { background: rgba(0,0,0,0.15); }
+    
+    .fp-view {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      background: rgba(255,255,255,0.5);
+      border: 1px solid rgba(0,0,0,0.1);
+      padding: 2px 6px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .fp-view:hover { background: rgba(255,255,255,0.9); }
+
+    /* 操作按钮组 */
+    .cell-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+    }
+    .btn-action {
+      background: transparent;
+      border: none;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s;
+    }
+    .btn-action svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+    
+    .btn-action:hover { color: var(--color-text-primary); }
+    .btn-action.delete:hover { color: #E53935; }
+
+    /* 历史记录摘要 */
+    .history-snippet {
+      font-size: 13px;
+      color: var(--color-text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 200px;
+    }
+
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">
+    <div class="nameplate">[BABEL-01 / 语义解压终端]</div>
+    <div class="nav-pills">
+      <div class="nav-pill">首页</div>
+      <div class="nav-pill">工作台</div>
+      <div class="nav-pill">模板库</div>
+      <div class="nav-pill active">我的</div>
+      <div class="nav-pill">设置</div>
+    </div>
+    <div class="nameplate">V4.0 // TRANSLUCENT</div>
+  </div>
+
+  <div class="workspace-container">
+    
+    <div class="glass-module sidebar">
+      <div class="user-avatar-box">
+        <div class="avatar-lcd">
+          <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <div class="user-name">OPERATOR_01</div>
+        <div class="user-id">ID: 88A4-9B2C</div>
+      </div>
+
+      <div class="sidebar-section-title">[QUOTA / 资源配额]</div>
+      <div class="quota-box">
+        <div class="quota-label"><span>当月解压次数</span> <span class="quota-val">3,450 / 5,000</span></div>
+        <div class="progress-bar">
+          <div class="progress-cell on"></div><div class="progress-cell on"></div>
+          <div class="progress-cell on"></div><div class="progress-cell on"></div>
+          <div class="progress-cell on"></div><div class="progress-cell on"></div>
+          <div class="progress-cell on"></div><div class="progress-cell"></div>
+          <div class="progress-cell"></div><div class="progress-cell"></div>
+        </div>
+      </div>
+      
+      <div class="quota-box">
+        <div class="quota-label"><span>专属记忆槽位</span> <span class="quota-val">2 / 4</span></div>
+        <div class="progress-bar">
+          <div class="progress-cell on"></div><div class="progress-cell on"></div>
+          <div class="progress-cell"></div><div class="progress-cell"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="glass-module main-content">
+      
+      <div class="data-section">
+        <div class="section-header">
+          <div class="section-title">[MY TEMPLATES / 专属模板]</div>
+          <button class="btn-new">+ 新建模板</button>
+        </div>
+
+        <div class="data-list">
+          <div class="list-header">
+            <div></div>
+            <div>模板名称</div>
+            <div>创建时间</div>
+            <div>10 维指纹</div>
+            <div style="text-align: right;">操作</div>
+          </div>
+
+          <div class="list-row">
+            <div class="checkbox"></div>
+            <div class="cell-title">
+              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              25岁女性种草体
+            </div>
+            <div class="cell-time">2026-05-15</div>
+            <div class="cell-fingerprint">
+              <div class="fp-bar">
+                <div class="fp-led v-high"></div><div class="fp-led v-low"></div><div class="fp-led v-mid"></div>
+                <div class="fp-led v-high"></div><div class="fp-led v-high"></div><div class="fp-led v-low"></div>
+                <div class="fp-led v-mid"></div><div class="fp-led v-low"></div><div class="fp-led v-low"></div><div class="fp-led v-high"></div>
+              </div>
+              <button class="fp-view">详情</button>
+            </div>
+            <div class="cell-actions">
+              <button class="btn-action"><svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg> 复用</button>
+              <button class="btn-action"><svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> 编辑</button>
+              <button class="btn-action delete"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> 删除</button>
+            </div>
+          </div>
+
+          <div class="list-row">
+            <div class="checkbox"></div>
+            <div class="cell-title">
+              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              轻松科普风
+            </div>
+            <div class="cell-time">2026-05-12</div>
+            <div class="cell-fingerprint">
+              <div class="fp-bar">
+                <div class="fp-led v-mid"></div><div class="fp-led v-high"></div><div class="fp-led v-low"></div>
+                <div class="fp-led v-low"></div><div class="fp-led v-mid"></div><div class="fp-led v-low"></div>
+                <div class="fp-led v-mid"></div><div class="fp-led v-low"></div><div class="fp-led v-high"></div><div class="fp-led v-low"></div>
+              </div>
+              <button class="fp-view">详情</button>
+            </div>
+            <div class="cell-actions">
+              <button class="btn-action"><svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg> 复用</button>
+              <button class="btn-action"><svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> 编辑</button>
+              <button class="btn-action delete"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> 删除</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="data-section">
+        <div class="section-header">
+          <div class="section-title">[HISTORY LOG / 生成历史]</div>
+          <div style="font-family: var(--font-mono); font-size: 11px; color: var(--color-text-secondary);">仅保留最近 30 天记录</div>
+        </div>
+
+        <div class="data-list">
+          <div class="list-header">
+            <div></div>
+            <div>输入指令 / 任务摘要</div>
+            <div>生成时间</div>
+            <div>应用模板</div>
+            <div style="text-align: right;">操作</div>
+          </div>
+
+          <div class="list-row">
+            <div class="checkbox"></div>
+            <div class="cell-title">
+              <svg viewBox="0 0 24 24" style="stroke: var(--color-text-secondary);"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+              <span class="history-snippet">给新手妈妈推荐婴儿保湿面霜...</span>
+            </div>
+            <div class="cell-time">10 分钟前</div>
+            <div class="cell-fingerprint" style="font-size: 12px; font-weight: 500;">
+              25岁女性种草体
+            </div>
+            <div class="cell-actions">
+              <button class="btn-action"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> 查看</button>
+              <button class="btn-action"><svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg> 再来一次</button>
+            </div>
+          </div>
+
+          <div class="list-row">
+            <div class="checkbox"></div>
+            <div class="cell-title">
+              <svg viewBox="0 0 24 24" style="stroke: var(--color-text-secondary);"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+              <span class="history-snippet">分析 Q2 季度的财报数据表现...</span>
+            </div>
+            <div class="cell-time">昨天 14:30</div>
+            <div class="cell-fingerprint" style="font-size: 12px; font-weight: 500; color: var(--color-text-secondary);">
+              [ 无 / 自定义微调 ]
+            </div>
+            <div class="cell-actions">
+              <button class="btn-action"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> 查看</button>
+              <button class="btn-action"><svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg> 再来一次</button>
+            </div>
+          </div>
+
+          <div class="list-row">
+            <div class="checkbox"></div>
+            <div class="cell-title">
+              <svg viewBox="0 0 24 24" style="stroke: var(--color-text-secondary);"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+              <span class="history-snippet">数码博主开箱测评新款降噪耳机...</span>
+            </div>
+            <div class="cell-time">2026-05-13</div>
+            <div class="cell-fingerprint" style="font-size: 12px; font-weight: 500;">
+              知乎硬核答
+            </div>
+            <div class="cell-actions">
+              <button class="btn-action"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> 查看</button>
+              <button class="btn-action"><svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg> 再来一次</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+
+      // 1. 顶部导航高亮切换
+      const navPills = document.querySelectorAll('.nav-pill');
+      navPills.forEach(pill => {
+        pill.addEventListener('click', function() {
+          navPills.forEach(p => p.classList.remove('active'));
+          this.classList.add('active');
+        });
+      });
+
+      // 2. 复选框状态切换 (纯 DOM 注入 SVG 模拟真实勾选)
+      const checkSvg = '<svg viewBox="0 0 24 24" style="width: 14px; height: 14px; position: absolute; top: 0px; left: 0px; stroke: var(--color-accent-primary); fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round;"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+      
+      document.querySelectorAll('.checkbox').forEach(box => {
+        box.addEventListener('click', function(e) {
+          e.stopPropagation(); // 阻止事件冒泡到行
+          const isChecked = this.getAttribute('data-checked') === 'true';
+          if (isChecked) {
+            this.innerHTML = ''; // 清空 SVG
+            this.setAttribute('data-checked', 'false');
+          } else {
+            this.innerHTML = checkSvg; // 注入选中 SVG
+            this.setAttribute('data-checked', 'true');
+          }
+        });
+      });
+
+      // 3. 删除按钮逻辑 (带确认及物理滑出移除动画)
+      document.querySelectorAll('.btn-action.delete').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          const row = this.closest('.list-row');
+          const titleElement = row.querySelector('.cell-title');
+          // 剔除可能带有的 SVG 元素内的文本，只获取文字
+          const title = titleElement ? titleElement.textContent.trim() : '此记录';
+          
+          if (confirm(`[SYS_WARN] 确定要永久删除「${title}」吗？\n此操作不可逆。`)) {
+            // 执行退场动画：渐隐并向左侧滑出轨道
+            row.style.opacity = '0';
+            row.style.transform = 'translateX(-30px)';
+            
+            // 动画结束后从 DOM 树拔除
+            setTimeout(() => {
+              row.remove();
+            }, 250); 
+          }
+        });
+      });
+
+      // 4. 新建模板按钮
+      const btnNew = document.querySelector('.btn-new');
+      if (btnNew) {
+        btnNew.addEventListener('click', () => {
+          alert('[SYS_CMD] 正在为您初始化空载面板，即将跳转至工作台...');
+        });
+      }
+
+      // 5. 其他操作按钮的系统提示挂载
+      document.querySelectorAll('.btn-action:not(.delete)').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          const actionName = this.textContent.trim();
+          const row = this.closest('.list-row');
+          const title = row.querySelector('.cell-title').textContent.trim();
+          
+          if (actionName.includes('复用') || actionName.includes('再来一次')) {
+            alert(`[SYS_CMD] 正在提取「${title}」的 10 维参数特征...\n\n参数挂载完毕，即将进入【工作台】`);
+          } else if (actionName.includes('编辑')) {
+            alert(`[SYS_CMD] 进入编辑模式：「${title}」\n\n您可以重新调整参数或修改模板名称。`);
+          } else if (actionName.includes('查看')) {
+            alert(`[HISTORY_LOG] 提取生成日志：「${title}」\n\n正在加载完整上下文记录...`);
+          }
+        });
+      });
+
+      // 6. 10 维指纹详情按钮
+      document.querySelectorAll('.fp-view').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          alert('[10D-VECTOR] 模板参数矩阵镜像：\n\n· 亲近感: HIGH\n· 干货密度: MID\n· 情绪浓度: LOW\n· 话语姿态: auto-inferred (0.2)\n...\n\n(提示：正式版将在这里展开悬浮雷达图面板)');
+        });
+      });
+
+    });
+  </script>
+</body>
+</html>

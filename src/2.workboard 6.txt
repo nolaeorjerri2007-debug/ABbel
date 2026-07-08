@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>语义解压 - 工业控制台 [工作区 - 批量与全自动引擎版]</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ========================================
+       V4 实体玻璃工业设计令牌 (Physical Glass Tokens)
+       ======================================== */
+    :root {
+      --color-bg-body: #ECE9E2;
+      --glass-panel: rgba(220, 216, 206, 0.65);
+      --glass-module: rgba(244, 241, 235, 0.4);
+      --glass-border: rgba(255, 255, 255, 0.5);
+      
+      --color-border-dark: rgba(0,0,0,0.15);
+      --color-text-title: #111110;
+      --color-text-primary: #2C2A28;
+      --color-text-secondary: #706D66;
+      --color-accent-primary: #D13E14;
+      --color-accent-ghost: rgba(209, 62, 20, 0.15);
+
+      --font-sans: 'Noto Sans SC', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      --lcd-bg: rgba(26, 29, 26, 0.9);
+      --lcd-text-bright: #66FF88;
+      --lcd-text-dim: #4B5E4B;
+      --lcd-text-amber: #FFB340;
+      
+      --led-off: #2C2C2C;
+
+      --shadow-panel: 0 30px 60px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.02);
+      --shadow-emboss: inset 0 1px 0 rgba(255,255,255,0.6), 0 4px 10px rgba(0,0,0,0.03);
+      --shadow-recess: inset 0 2px 5px rgba(0,0,0,0.1);
+      --shadow-slider: inset 0 1px 3px rgba(0,0,0,0.2), 0 1px 0 rgba(255,255,255,0.6);
+      
+      --blur-intensity: blur(15px);
+    }
+
+    body {
+      margin: 0;
+      height: 100vh;
+      background-color: var(--color-bg-body);
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(209, 62, 20, 0.03), transparent 50%),
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
+      font-family: var(--font-sans);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    * { box-sizing: border-box; }
+
+    /* ========================================
+       顶部全局导航 / 铭牌条
+       ======================================== */
+    .top-bar { height: 48px; display: flex; justify-content: space-between; align-items: center; padding: 0 24px; background: var(--glass-panel); backdrop-filter: var(--blur-intensity); -webkit-backdrop-filter: var(--blur-intensity); border-bottom: 1px solid var(--glass-border); z-index: 10; }
+    .nameplate { font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--color-text-secondary); letter-spacing: 0.1em; text-transform: uppercase; }
+    
+    .nav-pills { display: flex; gap: 16px; }
+    .nav-pill { font-size: 13px; font-weight: 600; color: var(--color-text-secondary); cursor: pointer; padding: 4px 12px; border-radius: 4px; transition: all 0.2s; }
+    .nav-pill:hover { background: rgba(0,0,0,0.05); }
+    .nav-pill.active { color: var(--color-accent-primary); background: rgba(209, 62, 20, 0.1); box-shadow: inset 0 1px 2px rgba(209, 62, 20, 0.2); }
+
+    .workspace-container { flex: 1; display: flex; padding: 16px; gap: 16px; height: calc(100vh - 48px); }
+
+    .glass-module { background: var(--glass-panel); backdrop-filter: var(--blur-intensity); -webkit-backdrop-filter: var(--blur-intensity); border: 1px solid var(--glass-border); border-radius: 12px; box-shadow: var(--shadow-panel); display: flex; flex-direction: column; overflow: hidden; position: relative; }
+
+    /* ========================================
+       左侧：渲染输出区
+       ======================================== */
+    .render-pane { flex: 6; min-width: 400px; position: relative; }
+    .render-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; border-bottom: 1px solid var(--color-border-dark); background: rgba(255,255,255,0.2); }
+    .task-title { font-size: 16px; font-weight: 700; color: var(--color-text-title); display: flex; align-items: center; gap: 12px; }
+    .version-tag { font-family: var(--font-mono); font-size: 11px; background: rgba(0,0,0,0.05); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(0,0,0,0.1); box-shadow: inset 0 1px 0 rgba(255,255,255,0.5); }
+    
+    .status-indicator { display: flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 11px; color: var(--color-text-secondary); }
+    .led-pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--lcd-text-bright); box-shadow: 0 0 8px var(--lcd-text-bright); animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0% { opacity: 0.5; box-shadow: 0 0 4px var(--lcd-text-bright); } 50% { opacity: 1; box-shadow: 0 0 12px var(--lcd-text-bright); } 100% { opacity: 0.5; box-shadow: 0 0 4px var(--lcd-text-bright); } }
+
+    .skeleton-loader { display: flex; gap: 8px; margin-bottom: 24px; }
+    .dot { width: 12px; height: 12px; border-radius: 2px; background: rgba(0,0,0,0.1); box-shadow: var(--shadow-recess); }
+    .dot.active { background: var(--color-accent-primary); box-shadow: 0 0 8px var(--color-accent-primary), inset 0 1px 0 rgba(255,255,255,0.4); }
+
+    .render-content { flex: 1; padding: 32px 40px; overflow-y: auto; font-size: 16px; line-height: 1.8; color: var(--color-text-primary); position: relative; }
+    .typing-cursor { display: inline-block; width: 8px; height: 18px; background-color: var(--color-accent-primary); vertical-align: text-bottom; animation: blink 1s step-end infinite; margin-left: 4px; }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* Diff 预览幽灵层 */
+    .diff-ghost-wrapper { position: relative; display: inline; transition: all 0.3s ease; }
+    .diff-ghost-wrapper.staged { background: var(--color-accent-ghost); border-bottom: 2px dashed var(--color-accent-primary); color: rgba(44, 42, 40, 0.7); padding: 2px 4px; border-radius: 4px; }
+    .diff-ghost-wrapper.staged::before { content: 'DIFF 预览'; position: absolute; top: -16px; left: 0; font-size: 10px; font-family: var(--font-mono); color: var(--color-accent-primary); font-weight: 700; }
+    .diff-ghost-wrapper.staged.auto-applying::before { content: 'AUTO 引擎重构中...'; color: var(--lcd-text-amber); }
+
+    /* 竖向历史版本河流 */
+    .version-timeline-vertical { position: absolute; bottom: 32px; right: 40px; display: flex; flex-direction: column; align-items: center; gap: 6px; z-index: 50; }
+    .v-node { width: 32px; height: 32px; border-radius: 50%; background: rgba(26, 29, 26, 0.85); border: 1px solid rgba(255,255,255,0.2); color: var(--color-text-secondary); display: flex; justify-content: center; align-items: center; font-size: 10px; font-family: var(--font-mono); font-weight: 700; cursor: pointer; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 4px 10px rgba(0,0,0,0.15); backdrop-filter: blur(5px); }
+    .v-node:hover { transform: scale(1.2); color: var(--lcd-text-bright); border-color: var(--lcd-text-bright); box-shadow: 0 0 15px rgba(102, 255, 136, 0.4), inset 0 0 8px rgba(102, 255, 136, 0.2); }
+    .v-node.active { background: var(--color-accent-primary); color: white; border-color: transparent; box-shadow: 0 0 15px rgba(209, 62, 20, 0.5); }
+    .v-line-vertical { width: 2px; height: 12px; background: rgba(0,0,0,0.15); border-radius: 1px; }
+    .v-node.branch { border: 1px dashed var(--color-accent-primary); background: rgba(209, 62, 20, 0.1); color: var(--color-accent-primary); }
+
+    /* 悬浮应用控制条 (批量结算) */
+    .apply-action-bar {
+      position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%) translateY(20px);
+      background: var(--lcd-bg); padding: 12px 20px; border-radius: 30px;
+      display: flex; gap: 16px; align-items: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      opacity: 0; pointer-events: none; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      border: 1px solid rgba(255,255,255,0.1); z-index: 100; white-space: nowrap; 
+    }
+    .apply-action-bar.visible { opacity: 1; pointer-events: auto; transform: translateX(-50%) translateY(0); }
+    .apply-text { color: white; font-size: 13px; font-weight: 500; font-family: var(--font-mono); display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+    .apply-text .token-badge { background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 4px; font-size: 11px; white-space: nowrap; color: var(--lcd-text-amber); }
+
+    /* ========================================
+       清爽玻璃按钮设计体系
+       ======================================== */
+    .render-footer { padding: 16px 24px; background: rgba(255,255,255,0.3); border-top: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; z-index: 70;}
+    .btn-tool { background: transparent; border: 1px solid var(--color-border-dark); padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; color: var(--color-text-secondary); cursor: pointer; transition: all 0.2s; box-shadow: var(--shadow-emboss); white-space: nowrap; }
+    .btn-tool:hover { background: rgba(255,255,255,0.5); color: var(--color-text-primary); }
+    .btn-tool:active { box-shadow: var(--shadow-recess); transform: translateY(1px); }
+    
+    .btn-primary { background: var(--color-accent-primary); color: white; border: none; padding: 10px 24px; border-radius: 6px; font-size: 14px; font-weight: 700; box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), 0 4px 8px rgba(209, 62, 20, 0.2); cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+    .btn-primary:active { transform: translateY(2px); box-shadow: inset 0 2px 4px rgba(0,0,0,0.3); }
+
+    .btn-amber { background: rgba(209, 62, 20, 0.1); border: 1px solid rgba(209, 62, 20, 0.3); color: var(--color-accent-primary); padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; box-shadow: var(--shadow-emboss); white-space: nowrap; }
+    .btn-amber:hover { background: rgba(209, 62, 20, 0.18); }
+    .btn-amber:active { box-shadow: var(--shadow-recess); transform: translateY(1px); }
+
+    /* ========================================
+       从底部滑出的毛玻璃追加上下文抽屉
+       ======================================== */
+    .context-drawer { position: absolute; bottom: -100%; left: 0; width: 100%; height: 45%; background: rgba(220, 216, 206, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 1px solid var(--glass-border); border-radius: 20px 20px 0 0; z-index: 60; transition: bottom 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1); display: flex; flex-direction: column; padding: 16px 32px 24px 32px; box-shadow: 0 -10px 40px rgba(0,0,0,0.15); }
+    .context-drawer.open { bottom: 0; }
+    .drawer-handle { width: 40px; height: 4px; background: rgba(0,0,0,0.2); border-radius: 2px; margin: 0 auto 16px auto; box-shadow: inset 0 1px 0 rgba(0,0,0,0.1), 0 1px 0 rgba(255,255,255,0.8); }
+    .drawer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .drawer-title { font-size: 15px; font-weight: 700; color: var(--color-text-title); font-family: var(--font-mono); }
+    .btn-close { background: transparent; border: none; font-size: 24px; cursor: pointer; color: var(--color-text-secondary); transition: color 0.2s; line-height: 1; }
+    .btn-close:hover { color: var(--color-accent-primary); }
+    .context-input { flex: 1; background: rgba(0,0,0,0.03); border: 1px inset rgba(0,0,0,0.1); border-radius: 8px; padding: 16px; font-size: 14px; font-family: var(--font-sans); color: var(--color-text-primary); resize: none; outline: none; box-shadow: var(--shadow-recess); margin-bottom: 16px; line-height: 1.6; }
+    .context-input:focus { background: rgba(255,255,255,0.6); border-color: rgba(209, 62, 20, 0.3); }
+    .drawer-actions { display: flex; justify-content: flex-end; }
+
+    .resizer { width: 8px; cursor: col-resize; display: flex; justify-content: center; align-items: center; margin: 0 -4px; z-index: 5; }
+    .resizer::after { content: ''; width: 2px; height: 40px; background: var(--color-border-dark); border-radius: 2px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.8); }
+
+    /* ========================================
+       右侧：调音台参数区 & 全自动引擎开关
+       ======================================== */
+    .control-pane { flex: 4; min-width: 340px; display: flex; flex-direction: column; }
+    .control-header { padding: 16px 20px; border-bottom: 1px solid var(--color-border-dark); background: rgba(255,255,255,0.2); display: flex; justify-content: space-between; align-items: center; }
+    
+    /* 自动引擎开关样式 */
+    .auto-apply-wrapper { display: flex; align-items: center; gap: 8px; font-size: 11px; font-family: var(--font-mono); color: var(--color-text-secondary); font-weight: 700; cursor: pointer; transition: color 0.3s; }
+    .auto-apply-wrapper:hover { color: var(--color-accent-primary); }
+    .auto-apply-wrapper input { display: none; }
+    .toggle-track { width: 28px; height: 16px; background: rgba(0,0,0,0.15); border-radius: 8px; position: relative; box-shadow: var(--shadow-recess); transition: 0.3s; }
+    .toggle-thumb { width: 12px; height: 12px; background: white; border-radius: 50%; position: absolute; top: 2px; left: 2px; transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+    .auto-apply-wrapper input:checked + .toggle-track { background: var(--color-accent-primary); box-shadow: inset 0 1px 3px rgba(0,0,0,0.2); }
+    .auto-apply-wrapper input:checked + .toggle-track .toggle-thumb { left: 14px; }
+
+    .control-content { flex: 1; padding: 24px; overflow-y: auto; position: relative; }
+
+    /* Solo 模式遮罩 */
+    .solo-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(220, 216, 206, 0.7); backdrop-filter: blur(2px); z-index: 10; display: none; cursor: pointer; }
+    .control-content.has-solo .solo-overlay { display: block; pointer-events: auto; }
+
+    .group-divider { display: flex; align-items: center; gap: 12px; margin: 24px 0 16px 0; }
+    .group-divider:first-child { margin-top: 0; }
+    .group-label { font-size: 14px; font-weight: 900; color: var(--color-text-title); letter-spacing: 2px; }
+    .group-sub { font-size: 11px; color: var(--color-text-secondary); font-weight: 500; }
+    .ruler-line { flex: 1; height: 8px; background: repeating-linear-gradient(to right, var(--color-border-dark) 0, var(--color-border-dark) 1px, transparent 1px, transparent 8px); }
+
+    .slider-item { margin-bottom: 24px; position: relative; z-index: 1; transition: all 0.3s; }
+    .slider-item.is-solo { z-index: 20; transform: scale(1.02); background: rgba(255,255,255,0.6); padding: 12px; border-radius: 8px; margin: 12px -12px 36px -12px; box-shadow: var(--shadow-panel); }
+    .slider-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }
+    .slider-title { font-size: 14px; font-weight: 700; color: var(--color-text-primary); }
+    .slider-name { font-family: var(--font-mono); font-size: 10px; color: var(--color-text-secondary); margin-left: 8px; }
+    .slider-val { font-family: var(--font-mono); font-size: 14px; font-weight: 700; color: var(--color-accent-primary); }
+
+    .solo-badge { display: none; background: var(--lcd-text-amber); color: #000; font-size: 9px; padding: 2px 4px; border-radius: 2px; font-family: var(--font-mono); font-weight: bold; margin-left: 6px; vertical-align: middle; }
+    .slider-item.is-solo .solo-badge { display: inline-block; }
+
+    /* 气泡提示 */
+    .slider-tooltip { position: absolute; top: -36px; left: 50%; transform: translateX(-50%); background: var(--lcd-bg); color: var(--lcd-text-bright); padding: 6px 10px; border-radius: 6px; font-size: 11px; font-family: var(--font-sans); white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity 0.2s, transform 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+    .slider-tooltip::after { content: ''; position: absolute; bottom: -4px; left: 50%; transform: translateX(-50%); border-width: 4px 4px 0; border-style: solid; border-color: var(--lcd-bg) transparent transparent transparent; }
+    .slider-track:hover .slider-tooltip, .slider-item.is-dragging .slider-tooltip { opacity: 1; transform: translateX(-50%) translateY(-4px); }
+
+    .slider-track { width: 100%; height: 12px; background: rgba(0,0,0,0.06); border-radius: 6px; box-shadow: var(--shadow-slider); position: relative; margin-bottom: 8px; cursor: pointer; }
+    .slider-fill { height: 100%; background: var(--color-text-primary); border-radius: 6px; box-shadow: inset 0 1px 1px rgba(255,255,255,0.3); pointer-events: none;}
+    .slider-item.staged .slider-fill { background: var(--color-accent-primary); } 
+
+    .slider-thumb { width: 20px; height: 24px; background: linear-gradient(to bottom, #F4F1EB, #DCD8CE); border: 1px solid rgba(0,0,0,0.2); border-radius: 4px; position: absolute; top: 50%; transform: translate(-50%, -50%); cursor: grab; box-shadow: 0 2px 4px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.8); display: flex; justify-content: center; align-items: center; z-index: 2; }
+    .slider-thumb::after { content: ''; width: 2px; height: 12px; background: rgba(0,0,0,0.3); box-shadow: inset 0 1px 0 rgba(0,0,0,0.5); }
+    .slider-labels { display: flex; justify-content: space-between; font-size: 11px; font-weight: 500; color: var(--color-text-secondary); }
+
+    /* 高阶抽屉及褒贬选择器 */
+    details.drawer-details > summary { list-style: none; background: rgba(255,255,255,0.3); border: 1px dashed var(--color-border-dark); padding: 10px; border-radius: 6px; text-align: center; font-size: 12px; font-weight: 600; color: var(--color-text-secondary); cursor: pointer; margin: 16px 0; transition: all 0.2s; }
+    details.drawer-details > summary::-webkit-details-marker { display: none; }
+    details.drawer-details > summary:hover { background: rgba(255,255,255,0.5); color: var(--color-text-primary); }
+    details.drawer-details[open] > summary { border-style: solid; background: rgba(255,255,255,0.6); color: var(--color-text-primary); margin-bottom: 24px; }
+    details.drawer-details > summary .summary-text-closed { display: inline; }
+    details.drawer-details > summary .summary-text-open { display: none; }
+    details.drawer-details[open] > summary .summary-text-closed { display: none; }
+    details.drawer-details[open] > summary .summary-text-open { display: inline; }
+    .drawer-content-inner { padding: 20px 16px 4px 16px; background: rgba(0,0,0,0.03); border-radius: 8px; border: 1px solid rgba(0,0,0,0.05); box-shadow: inset 0 2px 5px rgba(0,0,0,0.02); margin-bottom: 24px; }
+    
+    .tristate-selector { display: flex; gap: 12px; margin-bottom: 24px; }
+    .tristate-option { flex: 1; position: relative; }
+    .tristate-option input[type="radio"] { position: absolute; opacity: 0; pointer-events: none; }
+    .tristate-label { display: flex; align-items: center; justify-content: center; padding: 10px; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--color-text-secondary); box-shadow: var(--shadow-emboss); transition: all 0.2s; }
+    .tristate-option input:checked + .tristate-label { background: rgba(255,255,255,0.6); border-color: var(--color-accent-primary); color: var(--color-accent-primary); box-shadow: inset 0 2px 4px rgba(209, 62, 20, 0.1), 0 2px 4px rgba(0,0,0,0.05); }
+    .tristate-option input:active + .tristate-label { transform: translateY(2px); box-shadow: var(--shadow-recess); }
+    .tristate-indicator { width: 10px; height: 10px; border-radius: 50%; background: rgba(0,0,0,0.1); box-shadow: inset 0 1px 2px rgba(0,0,0,0.2); margin-right: 8px; transition: all 0.2s; }
+    .tristate-option input:checked + .tristate-label .tristate-indicator { background: var(--color-accent-primary); box-shadow: 0 0 6px var(--color-accent-primary); }
+
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">
+    <div class="nameplate">[BABEL-01 / 语义解压终端]</div>
+    <div class="nav-pills">
+      <div class="nav-pill">首页</div>
+      <div class="nav-pill active">工作台</div>
+      <div class="nav-pill">模板库</div>
+      <div class="nav-pill">我的</div>
+      <div class="nav-pill">设置</div>
+    </div>
+    <div class="nameplate">V4.0 // TRANSLUCENT</div>
+  </div>
+
+  <div class="workspace-container">
+    
+    <div class="glass-module render-pane">
+      <div class="render-header">
+        <div class="task-title">
+          给新手妈妈推荐婴儿面霜
+          <span class="version-tag">v1.0</span>
+        </div>
+        <div class="status-indicator">
+          <div class="led-pulse"></div>
+          DECODING_IN_PROGRESS
+        </div>
+      </div>
+
+      <div class="render-content">
+        <div class="skeleton-loader">
+          <div class="dot active"></div><div class="dot active"></div><div class="dot active"></div>
+          <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+          <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        </div>
+        <div style="font-size: 13px; color: var(--color-text-secondary); margin-bottom: 24px; font-family: var(--font-mono);">
+          > 正在解析你的意图…（映射 10 维参数）<br>
+          > 载入 [亲近感: 0.85] [情绪浓度: 0.70]...
+        </div>
+
+        <p><strong>姐妹们！真的必须按头安利这款面霜！</strong></p>
+        <p>昨天群里好几个宝妈都在问，换季宝宝脸颊泛红起皮怎么办？我跟你们说，千万别乱用偏方，宝宝皮肤屏障薄，经不起折腾！</p>
+        
+        <p>
+          <span class="diff-ghost-wrapper" id="targetSegment">我也是做了半个月功课，对比了成分表，最后锁定了这瓶修护霜。核心成分是 <strong>5% 泛醇 (B5) 加上神经酰胺</strong>，不仅能快速退红，还能把角质层“糊”得严严实实，冷风吹都不怕。</span><span class="typing-cursor"></span>
+        </p>
+
+        <div class="version-timeline-vertical">
+          <div class="v-node">V1</div>
+          <div class="v-line-vertical"></div>
+          <div class="v-node active">V2</div>
+          <div class="v-line-vertical" id="previewLine" style="background: dashed 2px var(--color-accent-primary); display: none;"></div>
+          <div class="v-node branch" id="previewNode" style="display: none;">V2'</div>
+        </div>
+
+        <div class="apply-action-bar" id="applyBar">
+          <div class="apply-text">
+            <span id="batchCountText">1 个参数已偏移</span>
+            <span class="token-badge" id="tokenEstText">≈ 消耗 25 Tokens</span>
+          </div>
+          <button class="btn-primary" style="padding: 6px 16px; font-size: 12px;" onclick="applyChanges()">✓ 应用重构</button>
+          <button class="btn-tool" style="padding: 6px 12px; font-size: 12px; color: white; border-color: rgba(255,255,255,0.3);" onclick="cancelChanges()">取消</button>
+        </div>
+        
+        <div class="context-drawer" id="contextDrawer">
+          <div class="drawer-handle"></div>
+          <div class="drawer-header">
+            <span class="drawer-title">追加上下文 / 新增设定</span>
+            <button class="btn-close" id="btnCloseDrawer">×</button>
+          </div>
+          <textarea class="context-input" placeholder="在此输入新的背景信息或具体要求，例如：宝宝对花生过敏，请避开含有花生油的成分..."></textarea>
+          <div class="drawer-actions">
+            <button class="btn-amber" style="padding: 8px 24px; font-size: 14px;" onclick="submitContext()">确认注入</button>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="render-footer">
+        <div style="display: flex; gap: 12px;">
+          <button class="btn-tool">重新生成</button>
+          <button class="btn-amber" id="btnAppendContext">追加上下文</button>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: center;">
+          <span style="font-size: 12px; color: var(--color-text-secondary); font-weight: 500;">当前配置已达预期？</span>
+          <button class="btn-tool">保存为专属模板</button>
+          <button class="btn-primary">一键复制并结束</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="resizer"></div>
+
+    <div class="glass-module control-pane">
+      <div class="control-header">
+        <span class="nameplate">[PARAMETERS / 调音台]</span>
+        <div style="display: flex; gap: 16px; align-items: center;">
+          <label class="auto-apply-wrapper" title="开启后，松开滑块1.5秒自动应用更改，无需手动确认">
+            <input type="checkbox" id="autoApplyToggle">
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+            AUTO 引擎
+          </label>
+          <button class="btn-tool" style="padding: 4px 10px; font-size: 11px;" onclick="cancelChanges()">重置</button>
+        </div>
+      </div>
+
+      <div class="control-content" id="controlContent">
+        <div class="solo-overlay" id="soloOverlay"></div>
+
+        <div class="group-divider">
+          <span class="group-label">人际</span><span class="group-sub">我跟你是什么关系</span>
+          <div class="ruler-line"></div>
+        </div>
+        <div class="slider-item" data-param="intimacy" data-original="0.85">
+          <div class="slider-header">
+            <div><span class="slider-title">亲近感 <span class="solo-badge">SOLO</span></span><span class="slider-name">intimacy</span></div>
+            <span class="slider-val">0.85</span>
+          </div>
+          <div class="slider-track"><div class="slider-tooltip"></div><div class="slider-fill" style="width: 85%;"></div><div class="slider-thumb" style="left: 85%;"></div></div>
+          <div class="slider-labels"><span>陌生官方</span><span>亲密熟络</span></div>
+        </div>
+
+        <div class="group-divider">
+          <span class="group-label">认知</span><span class="group-sub">你读起来费不费脑</span>
+          <div class="ruler-line"></div>
+        </div>
+        <div class="slider-item" data-param="info_density" data-original="0.60">
+          <div class="slider-header">
+            <div><span class="slider-title">干货密度 <span class="solo-badge">SOLO</span></span><span class="slider-name">info_density</span></div>
+            <span class="slider-val">0.60</span>
+          </div>
+          <div class="slider-track"><div class="slider-tooltip"></div><div class="slider-fill" style="width: 60%;"></div><div class="slider-thumb" style="left: 60%;"></div></div>
+          <div class="slider-labels"><span>抒情留白</span><span>参数硬核</span></div>
+        </div>
+
+        <div class="group-divider">
+          <span class="group-label">情动</span><span class="group-sub">我想让你感受什么</span>
+          <div class="ruler-line"></div>
+        </div>
+        <div class="slider-item" data-param="arousal" data-original="0.75">
+          <div class="slider-header">
+            <div><span class="slider-title">情绪浓度 <span class="solo-badge">SOLO</span></span><span class="slider-name">arousal</span></div>
+            <span class="slider-val">0.75</span>
+          </div>
+          <div class="slider-track"><div class="slider-tooltip"></div><div class="slider-fill" style="width: 75%;"></div><div class="slider-thumb" style="left: 75%;"></div></div>
+          <div class="slider-labels"><span>冷静克制</span><span>狂热宣泄</span></div>
+        </div>
+        <div class="slider-item" data-param="urgency" data-original="0.40">
+          <div class="slider-header">
+            <div><span class="slider-title">催促力度 <span class="solo-badge">SOLO</span></span><span class="slider-name">urgency</span></div>
+            <span class="slider-val">0.40</span>
+          </div>
+          <div class="slider-track"><div class="slider-tooltip"></div><div class="slider-fill" style="width: 40%;"></div><div class="slider-thumb" style="left: 40%;"></div></div>
+          <div class="slider-labels"><span>纯陈述</span><span>强促动</span></div>
+        </div>
+
+        <details class="drawer-details">
+          <summary><span class="summary-text-closed">▾ 展开高阶微调 (3 项)</span><span class="summary-text-open">▴ 收起高阶微调</span></summary>
+          <div class="drawer-content-inner">
+            <div class="slider-item" data-param="jargon_density" data-original="0.62">
+              <div class="slider-header">
+                <div><span class="slider-title">黑话浓度 <span class="solo-badge">SOLO</span></span><span class="slider-name">jargon_density</span></div>
+                <span class="slider-val">0.62</span>
+              </div>
+              <div class="slider-track"><div class="slider-tooltip"></div><div class="slider-fill" style="width: 62%;"></div><div class="slider-thumb" style="left: 62%;"></div></div>
+              <div class="slider-labels"><span>大白话</span><span>垂类黑话</span></div>
+            </div>
+
+            <div class="slider-item">
+              <div class="slider-header"><div><span class="slider-title">褒贬倾向</span><span class="slider-name">emotion_polarity</span></div></div>
+              <div class="tristate-selector">
+                <label class="tristate-option"><input type="radio" name="polarity" value="0"><div class="tristate-label"><div class="tristate-indicator"></div>避雷</div></label>
+                <label class="tristate-option"><input type="radio" name="polarity" value="0.5"><div class="tristate-label"><div class="tristate-indicator"></div>中性</div></label>
+                <label class="tristate-option"><input type="radio" name="polarity" value="1" checked><div class="tristate-label"><div class="tristate-indicator"></div>种草</div></label>
+              </div>
+            </div>
+
+            <div class="slider-item" data-param="directness" data-original="0.35" style="margin-bottom: 8px;">
+              <div class="slider-header">
+                <div><span class="slider-title">含蓄度 <span class="solo-badge">SOLO</span></span><span class="slider-name">directness</span></div>
+                <span class="slider-val">0.35</span>
+              </div>
+              <div class="slider-track"><div class="slider-tooltip"></div><div class="slider-fill" style="width: 35%;"></div><div class="slider-thumb" style="left: 35%;"></div></div>
+              <div class="slider-labels"><span>开门见山</span><span>懂的都懂</span></div>
+            </div>
+          </div>
+        </details>
+      </div>
+    </div>
+  </div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    
+    // 骨架屏流水灯
+    const dots = document.querySelectorAll('.skeleton-loader .dot');
+    let currentDot = 0;
+    setInterval(() => {
+      dots.forEach(dot => dot.classList.remove('active'));
+      dots[currentDot].classList.add('active');
+      if(currentDot > 0) dots[currentDot - 1].classList.add('active');
+      if(currentDot < dots.length - 1) dots[currentDot + 1].classList.add('active');
+      currentDot++;
+      if (currentDot >= dots.length) currentDot = 0;
+    }, 150);
+
+    // 追加上下文抽屉
+    const contextDrawer = document.getElementById('contextDrawer');
+    document.getElementById('btnAppendContext').addEventListener('click', () => {
+      contextDrawer.classList.add('open');
+      setTimeout(() => contextDrawer.querySelector('.context-input').focus(), 300);
+    });
+    document.getElementById('btnCloseDrawer').addEventListener('click', () => contextDrawer.classList.remove('open'));
+    window.submitContext = () => {
+      const textarea = contextDrawer.querySelector('.context-input');
+      if(textarea.value.trim() !== "") textarea.value = ""; 
+      contextDrawer.classList.remove('open');
+    };
+
+    // ==========================================
+    // 全新重构：批量结算 (购物车) & 全自动引擎
+    // ==========================================
+    const sliders = document.querySelectorAll('.slider-item');
+    const applyBar = document.getElementById('applyBar');
+    const targetSegment = document.getElementById('targetSegment');
+    const previewNode = document.getElementById('previewNode');
+    const previewLine = document.getElementById('previewLine');
+    const controlContent = document.getElementById('controlContent');
+    const soloOverlay = document.getElementById('soloOverlay');
+    const autoApplyToggle = document.getElementById('autoApplyToggle');
+    const batchCountText = document.getElementById('batchCountText');
+    const tokenEstText = document.getElementById('tokenEstText');
+
+    // 核心状态管理
+    const stagedParams = new Set(); // “购物车”：存放已偏移的滑块节点
+    let isAutoApplyOn = false;
+    let autoApplyTimer = null;
+    let soloTimer = null;
+    const originalText = targetSegment.innerHTML;
+
+    // 参数词典与 Mock
+    const paramDict = {
+      intimacy: { low: "语气将变得客观克制...", high: "语气将变得亲密熟络...", mock: "最近有很多新手妈妈私信我，说秋冬换季宝宝皮肤干燥。这款修护霜加入了5%的泛醇和神经酰胺，修护效果有口皆碑。" },
+      info_density: { low: "文本将变得通俗易懂...", high: "将加入更多硬核参数...", mock: "核心配方为 5% 泛醇（B5）复合神经酰胺（NP/AP/EOP），能显著降低 TEWL（经表皮失水率），重塑受损屏障。" },
+      arousal: { low: "情绪将趋于平缓...", high: "用词将极具煽动性...", mock: "天呐真的绝了！这瓶简直是来报恩的吧😭！满满的 B5 和神经酰胺，上脸就像给宝宝穿了隐形保暖衣！" },
+      urgency: { low: "转为客观陈述...", high: "加入强烈的行动号召...", mock: "群里的宝妈们别犹豫了，趁现在有活动赶紧囤！宝宝烂脸可等不起，早用早退红，手慢无！" },
+      jargon_density: { low: "大白话表达...", high: "增加垂类黑话...", mock: "主打一个仿生皮脂膜体系，B5 协同神经酰胺强效打底，退红维稳一把抓，屏障受损肌直接闭眼入。" },
+      directness: { low: "表达更开门见山...", high: "增加含蓄感...", mock: "换季风大，有些修护霜到底好不好用，看看大家的空瓶就知道了。成分配方摆在这里，懂的自然懂。" }
+    };
+
+    // 全自动引擎开关监听
+    autoApplyToggle.addEventListener('change', (e) => {
+      isAutoApplyOn = e.target.checked;
+      if (isAutoApplyOn && stagedParams.size > 0) {
+        // 如果开启时已有暂存参数，立即自动应用
+        applyBar.classList.remove('visible');
+        targetSegment.classList.add('auto-applying');
+        autoApplyTimer = setTimeout(() => applyChanges(), 1000);
+      } else {
+        targetSegment.classList.remove('auto-applying');
+        clearTimeout(autoApplyTimer);
+        if(!isAutoApplyOn && stagedParams.size > 0) applyBar.classList.add('visible'); // 关掉自动时，恢复底部 Bar
+      }
+    });
+
+    // 重置 / 取消
+    window.cancelChanges = () => {
+      sliders.forEach(slider => {
+        if(!slider.dataset.param) return;
+        const origVal = slider.dataset.original;
+        updateSliderVisual(slider, origVal);
+        slider.classList.remove('staged');
+      });
+      stagedParams.clear();
+      targetSegment.classList.remove('staged', 'auto-applying');
+      targetSegment.innerHTML = originalText;
+      applyBar.classList.remove('visible');
+      previewNode.style.display = 'none';
+      previewLine.style.display = 'none';
+      clearTimeout(autoApplyTimer);
+    };
+
+    // 应用变更
+    window.applyChanges = () => {
+      targetSegment.classList.remove('staged', 'auto-applying');
+      stagedParams.forEach(s => {
+        s.dataset.original = s.querySelector('.slider-val').innerText;
+        s.classList.remove('staged');
+      });
+      stagedParams.clear();
+      applyBar.classList.remove('visible');
+      previewNode.classList.remove('branch');
+      previewNode.classList.add('active'); 
+      previewLine.style.borderStyle = 'solid'; 
+    };
+
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && stagedParams.size > 0) cancelChanges(); });
+    soloOverlay.addEventListener('click', () => { controlContent.classList.remove('has-solo'); sliders.forEach(s => s.classList.remove('is-solo')); });
+
+    const updateSliderVisual = (slider, percentVal) => {
+      slider.querySelector('.slider-fill').style.width = (percentVal * 100).toFixed(1) + '%';
+      slider.querySelector('.slider-thumb').style.left = (percentVal * 100).toFixed(1) + '%';
+      slider.querySelector('.slider-val').textContent = Number(percentVal).toFixed(2);
+    };
+
+    sliders.forEach(slider => {
+      const track = slider.querySelector('.slider-track');
+      const thumb = slider.querySelector('.slider-thumb');
+      const paramName = slider.dataset.param;
+      if(!track || !thumb) return;
+
+      let isDragging = false;
+
+      const handleMove = (e) => {
+        if (!isDragging) return;
+        const rect = track.getBoundingClientRect();
+        let percent = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+        updateSliderVisual(slider, percent);
+        if(paramName && paramDict[paramName]) {
+          slider.querySelector('.slider-tooltip').innerText = percent > 0.5 ? paramDict[paramName].high : paramDict[paramName].low;
+        }
+      };
+
+      thumb.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        slider.classList.add('is-dragging');
+        soloTimer = setTimeout(() => {
+          if(isDragging) {
+            sliders.forEach(s => s.classList.remove('is-solo'));
+            slider.classList.add('is-solo');
+            controlContent.classList.add('has-solo');
+            if(navigator.vibrate) navigator.vibrate(50);
+          }
+        }, 600);
+      });
+
+      document.addEventListener('mousemove', handleMove);
+
+      document.addEventListener('mouseup', () => {
+        if(!isDragging) return;
+        isDragging = false;
+        slider.classList.remove('is-dragging');
+        clearTimeout(soloTimer);
+
+        const currentVal = parseFloat(slider.querySelector('.slider-val').innerText);
+        const originalVal = parseFloat(slider.dataset.original);
+
+        // 判定偏差入列/出列
+        if (Math.abs(currentVal - originalVal) > 0.15) {
+          slider.classList.add('staged');
+          stagedParams.add(slider);
+        } else {
+          slider.classList.remove('staged');
+          stagedParams.delete(slider);
+          updateSliderVisual(slider, originalVal); // 弹回
+        }
+
+        // 统一处理“购物车”结算视图
+        if (stagedParams.size > 0) {
+          targetSegment.classList.add('staged');
+          previewNode.style.display = 'flex';
+          previewLine.style.display = 'block';
+
+          // 决定幽灵层文案 (单个具体化，多个抽象化)
+          if (stagedParams.size === 1) {
+            const firstParam = Array.from(stagedParams)[0].dataset.param;
+            targetSegment.innerText = paramDict[firstParam]?.mock || originalText;
+          } else {
+            targetSegment.innerText = "（检测到多维参数矩阵已变更，系统正在根据最新的权重组合，准备为您重构最优文案表达...）";
+          }
+
+          // 分流引擎逻辑
+          if (isAutoApplyOn) {
+            applyBar.classList.remove('visible');
+            targetSegment.classList.add('auto-applying');
+            clearTimeout(autoApplyTimer);
+            autoApplyTimer = setTimeout(() => applyChanges(), 1500); // 1.5s 防抖自动提交
+          } else {
+            targetSegment.classList.remove('auto-applying');
+            batchCountText.innerText = `${stagedParams.size} 个参数已偏移`;
+            tokenEstText.innerText = `≈ 消耗 ${10 + stagedParams.size * 15} Tokens`;
+            applyBar.classList.add('visible');
+          }
+        } else {
+          cancelChanges(); // 如果所有滑块都拉回了原位，自动撤销态
+        }
+      });
+
+      track.addEventListener('mousedown', (e) => { if(e.target !== thumb) { isDragging = true; handleMove(e); } });
+    });
+  });
+</script>
+</body>
+</html>

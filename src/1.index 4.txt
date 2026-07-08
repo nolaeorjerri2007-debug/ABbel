@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>语义解压 - 现代工业玻璃台</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ========================================
+       V4: 实体玻璃工业设计令牌 (Physical Glass Tokens)
+       ======================================== */
+    :root {
+      --panel-width: 1400px;
+      --space-4: 16px;
+      --space-6: 24px;
+      
+      /* 基础背景：增加一点点明度和空气感 */
+      --color-bg-body: #ECE9E2;
+      
+      /* 毛玻璃核心色彩：使用 RGBA 开启通透感 */
+      --glass-panel: rgba(220, 216, 206, 0.65); /* 面板半透明 */
+      --glass-module: rgba(244, 241, 235, 0.4);  /* 模块更透明 */
+      --glass-border: rgba(255, 255, 255, 0.5);
+      
+      --color-text-primary: #2C2A28;
+      --color-text-secondary: #706D66;
+      --color-accent-primary: #D13E14;
+
+      --font-sans: 'Noto Sans SC', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      /* 液晶屏：依然保持深色以形成对比，但增加内发光 */
+      --lcd-bg: rgba(26, 29, 26, 0.9);
+      --lcd-text-bright: #66FF88;
+
+      /* 阴影：大幅度轻量化，使用大模糊半径 */
+      --shadow-panel: 0 30px 60px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.02);
+      --shadow-emboss: inset 0 1px 0 rgba(255,255,255,0.6), 0 4px 10px rgba(0,0,0,0.03);
+      --shadow-recess: inset 0 2px 4px rgba(0,0,0,0.05);
+      
+      /* 模糊强度 */
+      --blur-intensity: blur(15px);
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      background-color: var(--color-bg-body);
+      background-image: 
+        radial-gradient(circle at 10% 10%, rgba(209, 62, 20, 0.05), transparent 40%),
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
+      font-family: var(--font-sans);
+      padding: 20px;
+    }
+
+    /* ========================================
+       主面板：毛玻璃核心
+       ======================================== */
+    .main-panel {
+      position: relative;
+      width: 100%;
+      max-width: var(--panel-width);
+      background: var(--glass-panel);
+      backdrop-filter: var(--blur-intensity); 
+      -webkit-backdrop-filter: var(--blur-intensity);
+      border-radius: 12px;
+      padding: var(--space-6);
+      box-shadow: var(--shadow-panel);
+      border: 1px solid var(--glass-border);
+    }
+
+    /* 螺丝稍微缩小，颜色变浅，增加精致感 */
+    .screw {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(184, 180, 170, 0.5);
+      box-shadow: inset 0 1px 1px rgba(0,0,0,0.1), 0 1px 0 rgba(255,255,255,0.4);
+      position: absolute;
+    }
+    .screw:nth-of-type(1) { top: 20px; left: 20px; }
+    .screw:nth-of-type(2) { top: 20px; right: 20px; }
+    .screw:nth-of-type(3) { bottom: 20px; left: 20px; }
+    .screw:nth-of-type(4) { bottom: 20px; right: 20px; }
+
+    .nameplate {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--color-text-secondary);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      border-bottom: 1px solid rgba(0,0,0,0.08);
+      padding-bottom: 4px;
+      display: inline-block;
+      width: 100%;
+    }
+
+    .bento-grid {
+      display: grid;
+      grid-template-columns: 180px 1fr 280px;
+      gap: 24px;
+      margin-top: 16px;
+    }
+
+    /* ========================================
+       A. 导航面板
+       ======================================== */
+    .module-nav {
+      grid-row: 1 / 3;
+      padding-right: 16px;
+      border-right: 1px solid rgba(0,0,0,0.05);
+    }
+
+    .btn-nav {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      margin-bottom: 8px;
+      background: var(--glass-module);
+      border: 1px solid rgba(255,255,255,0.3);
+      box-shadow: var(--shadow-emboss);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--color-text-primary);
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+
+    .btn-nav:hover { background: rgba(255,255,255,0.5); }
+
+    .btn-nav.active {
+      background: rgba(255,255,255,0.8);
+      border-color: var(--color-accent-primary);
+      color: var(--color-accent-primary);
+    }
+
+    .led { width: 6px; height: 6px; border-radius: 50%; transition: all 0.2s; }
+    .led.on.red { background: var(--color-accent-primary); box-shadow: 0 0 8px var(--color-accent-primary); }
+    .led.off { background: rgba(0,0,0,0.1); }
+
+    /* ========================================
+       B. 中心核心区：增加透明感
+       ======================================== */
+    .slogan-area { text-align: center; margin-bottom: 32px; }
+    .slogan-title {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--color-text-title);
+      margin-top: 0;
+    }
+    .slogan-sub { font-size: 14px; color: var(--color-text-secondary); margin-top: 8px; }
+
+    .lcd-monitor {
+      background: var(--lcd-bg);
+      backdrop-filter: blur(5px);
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      border: 1px solid rgba(255,255,255,0.05);
+      position: relative;
+    }
+
+    .lcd-textarea {
+      width: 100%;
+      min-height: 180px;
+      background: transparent;
+      border: none;
+      color: var(--lcd-text-bright);
+      font-family: var(--font-sans);
+      font-size: 16px;
+      line-height: 1.6;
+      resize: none;
+      outline: none;
+    }
+    
+    .lcd-textarea::placeholder { color: rgba(102, 255, 136, 0.4); }
+
+    .exec-btn-container {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 24px;
+    }
+
+    .btn-exec {
+      background: var(--color-accent-primary);
+      color: white;
+      font-size: 16px;
+      font-weight: 600;
+      padding: 14px 40px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(209, 62, 20, 0.3);
+      transition: all 0.2s;
+    }
+    .btn-exec:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(209, 62, 20, 0.4); }
+    .btn-exec:active { transform: translateY(2px); box-shadow: 0 2px 5px rgba(209, 62, 20, 0.3); }
+
+    /* ========================================
+       C. 状态监控：卡片化轻盈感
+       ======================================== */
+    .status-box {
+      background: rgba(255,255,255,0.3);
+      backdrop-filter: blur(5px);
+      padding: 16px;
+      margin-bottom: 16px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    .status-value { font-size: 28px; color: var(--color-accent-primary); font-family: var(--font-mono); }
+
+    /* ========================================
+       D/E. 底部区域：磨砂卡片
+       ======================================== */
+    .bottom-section {
+      grid-column: 1 / 4;
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: 24px;
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 1px solid rgba(0,0,0,0.05);
+    }
+
+    .dial-card {
+      min-width: 150px;
+      height: 140px;
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.4);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .dial-card:hover {
+      background: rgba(255,255,255,0.5);
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+      border-color: var(--color-accent-primary);
+    }
+    .dial-title { font-size: 13px; font-weight: 600; margin-top: 12px; pointer-events: none; }
+
+    .slot-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(255,255,255,0.2);
+      padding: 12px 16px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      border: 1px solid rgba(255,255,255,0.2);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .slot-item:hover {
+      background: rgba(255,255,255,0.5);
+      border-color: var(--color-accent-primary);
+      transform: translateX(4px);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="main-panel">
+    <div class="screw"></div><div class="screw"></div>
+    <div class="screw"></div><div class="screw"></div>
+
+    <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+      <span class="nameplate" style="width: auto;">[BABEL-01 / 语义解压终端]</span>
+      <span class="nameplate" style="width: auto;">V4.0 // TRANSLUCENT_PRECISION</span>
+    </div>
+
+    <div class="bento-grid">
+      
+      <div class="module-nav">
+        <span class="nameplate">[MENU / 菜单]</span>
+        <button class="btn-nav active"><div class="led on red"></div>首页</button>
+        <button class="btn-nav"><div class="led off"></div>工作台</button>
+        <button class="btn-nav"><div class="led off"></div>模板库</button>
+        <button class="btn-nav"><div class="led off"></div>我的</button>
+        <button class="btn-nav"><div class="led off"></div>设置</button>
+      </div>
+
+      <div class="module-center">
+        <div class="slogan-area">
+          <h1 class="slogan-title">重塑巴别塔</h1>
+          <div class="slogan-sub">输入模糊指令，让多维参数重构语义</div>
+        </div>
+
+        <div class="lcd-monitor">
+          <textarea id="intentInput" class="lcd-textarea" placeholder="在此键入指令...&#10;(例如：给新手妈妈推荐婴儿面霜)"></textarea>
+          <div id="charCounter" style="text-align: right; color: var(--lcd-text-bright); opacity: 0.5; font-family: var(--font-mono); font-size: 11px; transition: opacity 0.2s;">READY_ 0000 / 2000</div>
+        </div>
+
+        <div class="exec-btn-container">
+          <button id="btnGenerate" class="btn-exec">解压生成 →</button>
+        </div>
+      </div>
+
+      <div class="module-status">
+        <span class="nameplate">[STATUS / 监控]</span>
+        <div class="status-box">
+          <div class="status-label">TODAY_PROCESSED</div>
+          <div class="status-value">00,127</div>
+        </div>
+        <div class="status-box">
+          <div class="status-label">MEM_SLOTS</div>
+          <div class="status-value" style="color: var(--color-text-primary); font-size: 22px;">02 / 04</div>
+        </div>
+      </div>
+
+      <div class="bottom-section">
+        <div>
+          <span class="nameplate">[PRESETS / 快速载入]</span>
+          <div style="display: flex; gap: 16px; margin-top: 16px;">
+            <div class="dial-card">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" pointer-events="none"><path d="M12 2v20M2 12h20"/></svg>
+              <span class="dial-title">种草体</span>
+            </div>
+            <div class="dial-card">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" pointer-events="none"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+              <span class="dial-title">深度文</span>
+            </div>
+            <div class="dial-card">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" pointer-events="none"><path d="M21 12l-18 12v-24z"/></svg>
+              <span class="dial-title">视频稿</span>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <span class="nameplate">[SLOTS / 记忆]</span>
+          <div style="margin-top: 16px;">
+            <div class="slot-item">25岁女性种草体</div>
+            <div class="slot-item">轻松科普风</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      
+      const intentInput = document.getElementById('intentInput');
+      const charCounter = document.getElementById('charCounter');
+      const btnGenerate = document.getElementById('btnGenerate');
+      const navBtns = document.querySelectorAll('.btn-nav');
+      const dialCards = document.querySelectorAll('.dial-card');
+      const slotItems = document.querySelectorAll('.slot-item');
+
+      // 1. 实时字符计数器
+      intentInput.addEventListener('input', (e) => {
+        const len = e.target.value.length;
+        const formattedLen = String(len).padStart(4, '0');
+        charCounter.textContent = len > 0 ? `TYPING_ ${formattedLen} / 2000` : `READY_ 0000 / 2000`;
+        charCounter.style.opacity = len > 0 ? '1' : '0.5';
+      });
+
+      // 支持 CMD/CTRL + Enter 快速提交
+      intentInput.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+          btnGenerate.click();
+        }
+      });
+
+      // 2. 导航栏点按高亮联动
+      navBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+          // 熄灭所有导航
+          navBtns.forEach(b => {
+            b.classList.remove('active');
+            const led = b.querySelector('.led');
+            led.classList.remove('on', 'red');
+            led.classList.add('off');
+          });
+          // 点亮当前导航
+          this.classList.add('active');
+          const led = this.querySelector('.led');
+          led.classList.remove('off');
+          led.classList.add('on', 'red');
+        });
+      });
+
+      // 3. 预设卡片载入模拟
+      dialCards.forEach(card => {
+        card.addEventListener('click', function() {
+          const title = this.querySelector('.dial-title').textContent;
+          // 将模板指令拍入输入框
+          intentInput.value = `[预设载入: ${title}] 请帮我针对以下产品写一段...`;
+          intentInput.dispatchEvent(new Event('input')); // 手动触发计数器更新
+          intentInput.focus();
+        });
+      });
+
+      // 4. 专属记忆槽载入模拟
+      slotItems.forEach(slot => {
+        slot.addEventListener('click', function() {
+          const title = this.textContent.trim();
+          intentInput.value = `[专属记忆位: ${title}] 按照此配置帮我处理以下内容...`;
+          intentInput.dispatchEvent(new Event('input'));
+          intentInput.focus();
+        });
+      });
+
+      // 5. 执行解压 (提交验证)
+      btnGenerate.addEventListener('click', function() {
+        if (intentInput.value.trim() === '') {
+          // 报错：空状态震动与闪烁
+          charCounter.textContent = 'SYS_ERR: 请输入解压指令！';
+          charCounter.style.color = 'var(--lcd-text-danger)';
+          charCounter.style.opacity = '1';
+          intentInput.focus();
+          
+          setTimeout(() => {
+            charCounter.textContent = 'READY_ 0000 / 2000';
+            charCounter.style.color = 'var(--lcd-text-bright)';
+            charCounter.style.opacity = '0.5';
+          }, 2000);
+          return;
+        }
+
+        // 模拟执行加载动画
+        const originalText = this.innerHTML;
+        this.innerHTML = '解析并连接引擎...';
+        this.style.pointerEvents = 'none';
+        this.style.opacity = '0.8';
+
+        setTimeout(() => {
+          this.innerHTML = originalText;
+          this.style.pointerEvents = 'auto';
+          this.style.opacity = '1';
+          
+          // 模拟页面跳转 (如果是在同一文件夹下，您可以直接替换为 window.location.href = 'workspace.html')
+          alert('✔ 指令解析完毕，即将进入【工作台】...');
+        }, 800);
+      });
+
+      // 页面加载完毕后自动聚焦输入框
+      intentInput.focus();
+    });
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>语义解压 - 设置控制台</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ========================================
+       V4 实体玻璃工业设计令牌 (Physical Glass Tokens)
+       ======================================== */
+    :root {
+      --color-bg-body: #ECE9E2;
+      --glass-panel: rgba(220, 216, 206, 0.65);
+      --glass-module: rgba(244, 241, 235, 0.4);
+      --glass-border: rgba(255, 255, 255, 0.5);
+      
+      --color-border-dark: rgba(0,0,0,0.15);
+      --color-border-light: rgba(255,255,255,0.4);
+      --color-text-title: #111110;
+      --color-text-primary: #2C2A28;
+      --color-text-secondary: #706D66;
+      --color-accent-primary: #D13E14;
+      --color-danger: #C62828;
+
+      --font-sans: 'Noto Sans SC', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      --lcd-bg: rgba(26, 29, 26, 0.9);
+      --lcd-text-bright: #66FF88;
+      --lcd-text-amber: #FFB340;
+      --lcd-text-dim: #4B5E4B;
+      
+      --led-off: #2C2C2C;
+      --led-amber: #FFB340;
+
+      --shadow-panel: 0 30px 60px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.02);
+      --shadow-emboss: inset 0 1px 0 rgba(255,255,255,0.6), 0 4px 10px rgba(0,0,0,0.03);
+      --shadow-recess: inset 0 2px 5px rgba(0,0,0,0.1), inset 0 0 0 1px rgba(0,0,0,0.05);
+      
+      --blur-intensity: blur(15px);
+    }
+
+    body {
+      margin: 0;
+      height: 100vh;
+      background-color: var(--color-bg-body);
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(209, 62, 20, 0.03), transparent 50%),
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
+      font-family: var(--font-sans);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    * { box-sizing: border-box; }
+
+    /* ========================================
+       顶部全局导航
+       ======================================== */
+    .top-bar {
+      height: 48px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 24px;
+      background: var(--glass-panel);
+      backdrop-filter: var(--blur-intensity);
+      -webkit-backdrop-filter: var(--blur-intensity);
+      border-bottom: 1px solid var(--glass-border);
+      z-index: 10;
+    }
+
+    .nameplate {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--color-text-secondary);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .nav-pills { display: flex; gap: 16px; }
+    .nav-pill {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-text-secondary);
+      cursor: pointer;
+      padding: 4px 12px;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+    .nav-pill:hover { background: rgba(0,0,0,0.05); }
+    .nav-pill.active {
+      color: var(--color-accent-primary);
+      background: rgba(209, 62, 20, 0.1);
+      box-shadow: inset 0 1px 2px rgba(209, 62, 20, 0.2);
+    }
+
+    /* ========================================
+       页面主容器
+       ======================================== */
+    .workspace-container {
+      flex: 1;
+      display: flex;
+      padding: 16px 24px 24px 24px;
+      gap: 24px;
+      height: calc(100vh - 48px);
+      max-width: 1440px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .glass-module {
+      background: var(--glass-panel);
+      backdrop-filter: var(--blur-intensity);
+      -webkit-backdrop-filter: var(--blur-intensity);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      box-shadow: var(--shadow-panel);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ========================================
+       左侧：设置分类菜单
+       ======================================== */
+    .sidebar {
+      width: 240px;
+      flex-shrink: 0;
+      padding: 24px 0;
+      border-right: 1px solid var(--color-border-dark);
+      position: relative;
+    }
+
+    .sidebar-header {
+      padding: 0 24px 16px 24px;
+      border-bottom: 1px solid var(--color-border-dark);
+      margin-bottom: 16px;
+    }
+
+    /* 修复下划线问题：text-decoration: none */
+    .menu-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 24px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-text-secondary);
+      cursor: pointer;
+      text-decoration: none; 
+      transition: all 0.2s;
+      position: relative;
+    }
+    .menu-item svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
+    
+    .menu-item:hover {
+      background: rgba(255,255,255,0.4);
+      color: var(--color-text-primary);
+    }
+    .menu-item.active {
+      background: rgba(209, 62, 20, 0.08);
+      color: var(--color-accent-primary);
+      box-shadow: inset 3px 0 0 var(--color-accent-primary);
+    }
+
+    .logout-btn {
+      position: absolute;
+      bottom: 24px;
+      width: 100%;
+      color: var(--color-text-secondary);
+    }
+    .logout-btn:hover {
+      color: var(--color-text-title);
+      background: rgba(0,0,0,0.05);
+    }
+
+    /* ========================================
+       右侧：设置表单与详情区
+       ======================================== */
+    .main-content {
+      flex: 1;
+      padding: 32px 48px;
+      overflow-y: auto;
+      scrollbar-width: none;
+      position: relative; /* 为 offsetTop 提供基准 */
+    }
+    .main-content::-webkit-scrollbar { display: none; }
+
+    .section-block {
+      max-width: 800px;
+      margin-bottom: 56px;
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 900;
+      color: var(--color-text-title);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--color-border-dark);
+    }
+    .section-title::before {
+      content: '';
+      display: block;
+      width: 4px;
+      height: 18px;
+      background: var(--color-accent-primary);
+      border-radius: 2px;
+    }
+    
+    .sub-section-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--color-text-title);
+      margin: 24px 0 16px 0;
+    }
+
+    /* 头像上传区 */
+    .avatar-upload-group {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+    .avatar-lcd {
+      width: 80px;
+      height: 80px;
+      background: var(--lcd-bg);
+      border: 2px solid #222;
+      border-radius: 8px;
+      box-shadow: inset 0 2px 6px rgba(0,0,0,0.5), 0 2px 0 rgba(255,255,255,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .avatar-lcd svg { width: 40px; height: 40px; stroke: var(--lcd-text-bright); stroke-width: 1.5; fill: none; }
+    
+    .avatar-info h3 { margin: 0 0 4px 0; font-size: 16px; color: var(--color-text-primary); }
+    .avatar-info p { margin: 0 0 12px 0; font-size: 12px; font-family: var(--font-mono); color: var(--color-text-secondary); }
+
+    /* 表单系统 (凹陷玻璃感) */
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+    .form-row-single {
+      margin-bottom: 24px;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .form-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--color-text-secondary);
+    }
+    
+    .form-input {
+      background: rgba(0,0,0,0.03);
+      border: 1px solid var(--color-border-dark);
+      padding: 12px 16px;
+      border-radius: 6px;
+      font-family: var(--font-sans);
+      font-size: 14px;
+      color: var(--color-text-primary);
+      box-shadow: var(--shadow-recess);
+      outline: none;
+      transition: all 0.2s;
+    }
+    .form-input:focus {
+      background: rgba(255,255,255,0.5);
+      border-color: var(--color-accent-primary);
+      box-shadow: 0 0 0 3px rgba(209, 62, 20, 0.1), var(--shadow-recess);
+    }
+    .form-input::placeholder { color: rgba(0,0,0,0.3); }
+    .form-input:disabled {
+      background: rgba(0,0,0,0.06);
+      color: var(--color-text-secondary);
+      cursor: not-allowed;
+    }
+
+    /* 终端机密字段 (LCD 风格) */
+    .form-input.lcd-field {
+      background: var(--lcd-bg);
+      border: 2px solid #222;
+      color: var(--lcd-text-amber);
+      font-family: var(--font-mono);
+      box-shadow: inset 0 2px 6px rgba(0,0,0,0.6);
+      letter-spacing: 1px;
+    }
+
+    /* 通用按钮系统 */
+    .btn-tool {
+      background: rgba(255,255,255,0.4);
+      border: 1px solid var(--color-border-dark);
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-text-primary);
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: var(--shadow-emboss);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .btn-tool:hover { background: rgba(255,255,255,0.7); }
+    .btn-tool:active { box-shadow: var(--shadow-recess); transform: translateY(1px); }
+    .btn-tool svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+
+    .btn-primary {
+      background: var(--color-accent-primary);
+      color: white;
+      border: none;
+      padding: 12px 32px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 700;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), 0 4px 8px rgba(209, 62, 20, 0.2);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary:active { transform: translateY(2px); box-shadow: inset 0 2px 4px rgba(0,0,0,0.3); }
+
+    /* 危险操作按钮 */
+    .btn-danger {
+      background: rgba(198, 40, 40, 0.05);
+      border: 1px solid rgba(198, 40, 40, 0.3);
+      color: var(--color-danger);
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: var(--shadow-emboss);
+      transition: all 0.2s;
+    }
+    .btn-danger:hover { background: rgba(198, 40, 40, 0.1); border-color: var(--color-danger); }
+    .btn-danger:active { box-shadow: var(--shadow-recess); transform: translateY(1px); }
+
+    /* ========================================
+       API 配额专属进度条
+       ======================================== */
+    .quota-display {
+      background: var(--glass-module);
+      border: 1px solid var(--color-border-light);
+      padding: 24px;
+      border-radius: 8px;
+      box-shadow: var(--shadow-emboss);
+      margin-top: 16px;
+    }
+    .quota-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .quota-title { font-size: 14px; font-weight: 700; color: var(--color-text-primary); }
+    .quota-val { font-family: var(--font-mono); font-size: 16px; font-weight: 900; color: var(--color-text-primary); }
+    
+    .progress-bar-large {
+      display: flex;
+      gap: 3px;
+      background: rgba(0,0,0,0.06);
+      padding: 3px;
+      border-radius: 4px;
+      box-shadow: var(--shadow-recess);
+    }
+    .progress-cell-lg { height: 10px; flex: 1; background: rgba(0,0,0,0.08); border-radius: 2px; }
+    .progress-cell-lg.on { background: var(--color-accent-primary); box-shadow: 0 0 4px var(--color-accent-primary); }
+    .progress-cell-lg.warn { background: var(--lcd-text-amber); box-shadow: 0 0 4px var(--lcd-text-amber); }
+
+    /* ========================================
+       偏好设置组 (带背景框)
+       ======================================== */
+    .pref-group-box {
+      background: rgba(255,255,255,0.3);
+      border-radius: 8px;
+      padding: 0 20px;
+      margin-bottom: 24px;
+      border: 1px solid var(--color-border-light);
+      box-shadow: var(--shadow-emboss);
+    }
+
+    /* 机械拨动开关 (Mechanical Toggle) */
+    .pref-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 0;
+      border-bottom: 1px dashed var(--color-border-dark);
+    }
+    .pref-row:last-child { border-bottom: none; }
+    .pref-info h4 { margin: 0 0 4px 0; font-size: 14px; color: var(--color-text-primary); font-weight: 600; }
+    .pref-info p { margin: 0; font-size: 12px; color: var(--color-text-secondary); }
+
+    .toggle-checkbox { display: none; }
+    
+    .toggle-label {
+      width: 52px;
+      height: 28px;
+      background: rgba(0,0,0,0.1);
+      border-radius: 14px;
+      border: 1px solid rgba(0,0,0,0.15);
+      box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
+      cursor: pointer;
+      position: relative;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+    }
+    
+    .toggle-thumb {
+      width: 22px;
+      height: 22px;
+      background: linear-gradient(180deg, #FFFFFF 0%, #DCD8CE 100%);
+      border-radius: 50%;
+      position: absolute;
+      left: 2px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.8);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .toggle-thumb::after {
+      content: '';
+      width: 2px; height: 10px;
+      background: rgba(0,0,0,0.1);
+      box-shadow: 4px 0 0 rgba(0,0,0,0.1), -4px 0 0 rgba(0,0,0,0.1);
+    }
+
+    .toggle-checkbox:checked + .toggle-label {
+      background: rgba(209, 62, 20, 0.15);
+      border-color: rgba(209, 62, 20, 0.3);
+      box-shadow: inset 0 2px 5px rgba(209, 62, 20, 0.2);
+    }
+    .toggle-checkbox:checked + .toggle-label .toggle-thumb {
+      left: 26px;
+    }
+
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">
+    <div class="nameplate">[BABEL-01 / 语义解压终端]</div>
+    <div class="nav-pills">
+      <div class="nav-pill">首页</div>
+      <div class="nav-pill">工作台</div>
+      <div class="nav-pill">模板库</div>
+      <div class="nav-pill">我的</div>
+      <div class="nav-pill active">设置</div>
+    </div>
+    <div class="nameplate">V4.0 // TRANSLUCENT</div>
+  </div>
+
+  <div class="workspace-container">
+    
+    <div class="glass-module sidebar">
+      <div class="sidebar-header">
+        <div class="nameplate">[SETTINGS_CONFIG]</div>
+      </div>
+      
+      <a href="#section-account" class="menu-item active">
+        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        账户信息
+      </a>
+      <a href="#section-api" class="menu-item">
+        <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+        API 配额
+      </a>
+      <a href="#section-prefs" class="menu-item">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        系统偏好
+      </a>
+      <a href="#section-security" class="menu-item">
+        <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        安全设置
+      </a>
+
+      <a href="#" class="menu-item logout-btn">
+        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        退出终端
+      </a>
+    </div>
+
+    <div class="glass-module main-content">
+      
+      <div id="section-account" class="section-block">
+        <h2 class="section-title">账户信息</h2>
+        
+        <div class="avatar-upload-group">
+          <div class="avatar-lcd">
+            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <div class="avatar-info">
+            <h3>OPERATOR_01</h3>
+            <p>ID: 88A4-9B2C-773X</p>
+            <button class="btn-tool">
+              <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              更新操作员图像
+            </button>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">操作员代号 (Username)</label>
+            <input type="text" class="form-input" value="OPERATOR_01">
+          </div>
+          <div class="form-group">
+            <label class="form-label">通讯节点 (Email)</label>
+            <input type="email" class="form-input" value="operator.01@babel.sys" disabled>
+          </div>
+        </div>
+      </div>
+
+      <div id="section-api" class="section-block">
+        <h2 class="section-title">API 与资源配额</h2>
+        
+        <div class="form-group" style="margin-bottom: 24px;">
+          <label class="form-label">主干网络接入密钥 (Secret API Key)</label>
+          <div style="display: flex; gap: 12px;">
+            <input type="text" class="form-input lcd-field" style="flex: 1;" value="sk-babel-***********************H8x2" readonly>
+            <button class="btn-tool">
+              <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              复制
+            </button>
+          </div>
+          <p style="font-size: 12px; color: var(--color-text-secondary); margin-top: 8px;">请妥善保管您的终端密钥，不要在公共网络泄露。</p>
+        </div>
+
+        <div class="quota-display">
+          <div class="quota-header">
+            <span class="quota-title">当月解压阵列使用量 (Requests)</span>
+            <span class="quota-val">3,450 / 5,000</span>
+          </div>
+          <div class="progress-bar-large">
+            <div class="progress-cell-lg on"></div><div class="progress-cell-lg on"></div>
+            <div class="progress-cell-lg on"></div><div class="progress-cell-lg on"></div>
+            <div class="progress-cell-lg on"></div><div class="progress-cell-lg on"></div>
+            <div class="progress-cell-lg on"></div><div class="progress-cell-lg on"></div>
+            <div class="progress-cell-lg on"></div><div class="progress-cell-lg on"></div>
+            <div class="progress-cell-lg on"></div><div class="progress-cell-lg on"></div>
+            <div class="progress-cell-lg on"></div><div class="progress-cell-lg warn"></div>
+            <div class="progress-cell-lg"></div><div class="progress-cell-lg"></div>
+            <div class="progress-cell-lg"></div><div class="progress-cell-lg"></div>
+            <div class="progress-cell-lg"></div><div class="progress-cell-lg"></div>
+          </div>
+          <div style="margin-top: 16px; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 12px; color: var(--color-text-secondary);">当前层级：工业版 (Industrial Tier)</span>
+            <button class="btn-tool" style="color: var(--color-accent-primary); border-color: rgba(209, 62, 20, 0.3);">升级配额限制</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="section-prefs" class="section-block">
+        <h2 class="section-title">系统偏好</h2>
+        
+        <h3 class="sub-section-title">基础设置</h3>
+        <div class="form-row" style="margin-bottom: 24px;">
+          <div class="form-group">
+            <label class="form-label">默认输出格式</label>
+            <select class="form-input" style="appearance: none; background-image: url('data:image/svg+xml;utf8,<svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"%232C2A28\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" xmlns=\"http://www.w3.org/2000/svg\"><polyline points=\"6 9 12 15 18 9\"></polyline></svg>'); background-repeat: no-repeat; background-position: right 16px center;">
+              <option value="md">Markdown (富文本)</option>
+              <option value="txt">Plain Text (纯文本)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">界面语言</label>
+            <select class="form-input" style="appearance: none; background-image: url('data:image/svg+xml;utf8,<svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"%232C2A28\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" xmlns=\"http://www.w3.org/2000/svg\"><polyline points=\"6 9 12 15 18 9\"></polyline></svg>'); background-repeat: no-repeat; background-position: right 16px center;">
+              <option value="zh">简体中文 (系统默认)</option>
+              <option value="en">English (US)</option>
+            </select>
+          </div>
+        </div>
+
+        <h3 class="sub-section-title">界面偏好</h3>
+        <div class="pref-group-box">
+          <div class="pref-row">
+            <div class="pref-info">
+              <h4>流式文本打字效果</h4>
+              <p>在工作台逐字显示生成的内容</p>
+            </div>
+            <input type="checkbox" id="toggle-stream" class="toggle-checkbox" checked>
+            <label for="toggle-stream" class="toggle-label"><div class="toggle-thumb"></div></label>
+          </div>
+
+          <div class="pref-row">
+            <div class="pref-info">
+              <h4>显示 10 维参数指纹</h4>
+              <p>在模板卡片上显示参数概览</p>
+            </div>
+            <input type="checkbox" id="toggle-10d" class="toggle-checkbox" checked>
+            <label for="toggle-10d" class="toggle-label"><div class="toggle-thumb"></div></label>
+          </div>
+
+          <div class="pref-row">
+            <div class="pref-info">
+              <h4>启用键盘快捷键</h4>
+              <p>使用快捷键快速访问功能 (Ctrl+Enter 提交等)</p>
+            </div>
+            <input type="checkbox" id="toggle-shortcut" class="toggle-checkbox" checked>
+            <label for="toggle-shortcut" class="toggle-label"><div class="toggle-thumb"></div></label>
+          </div>
+          
+          <div class="pref-row" style="border-bottom: none;">
+            <div class="pref-info">
+              <h4>开发者调试模式 (Debug Mode)</h4>
+              <p>在界面显示后端推断的隐性维度标签 (auto-inferred)</p>
+            </div>
+            <input type="checkbox" id="toggle-debug" class="toggle-checkbox">
+            <label for="toggle-debug" class="toggle-label"><div class="toggle-thumb"></div></label>
+          </div>
+        </div>
+
+        <h3 class="sub-section-title">通知偏好</h3>
+        <div class="pref-group-box">
+          <div class="pref-row">
+            <div class="pref-info">
+              <h4>邮件通知</h4>
+              <p>接收产品更新和重要通知</p>
+            </div>
+            <input type="checkbox" id="toggle-email" class="toggle-checkbox">
+            <label for="toggle-email" class="toggle-label"><div class="toggle-thumb"></div></label>
+          </div>
+
+          <div class="pref-row" style="border-bottom: none;">
+            <div class="pref-info">
+              <h4>配额预警</h4>
+              <p>API 配额低于 20% 时发送提醒</p>
+            </div>
+            <input type="checkbox" id="toggle-quota" class="toggle-checkbox" checked>
+            <label for="toggle-quota" class="toggle-label"><div class="toggle-thumb"></div></label>
+          </div>
+        </div>
+      </div>
+
+      <div id="section-security" class="section-block">
+        <h2 class="section-title">安全设置</h2>
+        <p style="font-size: 13px; color: var(--color-text-secondary); margin-bottom: 24px;">保护你的账户安全</p>
+        
+        <h3 class="sub-section-title">修改密码</h3>
+        <div class="pref-group-box" style="padding: 24px;">
+          <div class="form-row-single">
+            <div class="form-group">
+              <label class="form-label">当前密码</label>
+              <input type="password" class="form-input" placeholder="请输入当前密码">
+            </div>
+          </div>
+          <div class="form-row-single">
+            <div class="form-group">
+              <label class="form-label">新密码</label>
+              <input type="password" class="form-input" placeholder="至少 8 位，包含字母和数字">
+            </div>
+          </div>
+          <div class="form-row-single">
+            <div class="form-group">
+              <label class="form-label">确认新密码</label>
+              <input type="password" class="form-input" placeholder="再次输入新密码">
+            </div>
+          </div>
+          <div style="display: flex; gap: 12px; margin-top: 16px;">
+            <button class="btn-primary">更新密码</button>
+            <button class="btn-tool">取消</button>
+          </div>
+        </div>
+
+        <h3 class="sub-section-title">账户操作</h3>
+        <div class="pref-group-box" style="padding: 24px;">
+          <p style="font-size: 13px; color: var(--color-text-secondary); margin: 0 0 24px 0;">谨慎操作，此操作不可逆</p>
+          <div style="display: flex; gap: 16px;">
+            <button class="btn-tool">退出登录</button>
+            <button class="btn-danger">删除账户</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 16px; margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--color-border-dark);">
+        <button class="btn-primary">保存系统配置</button>
+        <button class="btn-tool">撤销更改</button>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const mainContent = document.querySelector('.main-content');
+      const sections = document.querySelectorAll('.section-block');
+      const navLinks = document.querySelectorAll('.menu-item:not(.logout-btn)');
+
+      // 1. 滚动区域侦测 (ScrollSpy)
+      mainContent.addEventListener('scroll', () => {
+        let currentId = '';
+        
+        // 遍历所有区段，找出当前进入可视范围的区块
+        sections.forEach(section => {
+          // 由于 main-content 设置了 position:relative，可以直接获取 offsetTop
+          const sectionTop = section.offsetTop; 
+          // 留出 100px 的提前量缓冲，让高亮切换更符合直觉
+          if (mainContent.scrollTop >= sectionTop - 100) {
+            currentId = section.getAttribute('id');
+          }
+        });
+
+        // 边缘情况处理：如果用户滚动到了最底部，强制高亮最后一个导航项
+        if (mainContent.scrollHeight - mainContent.scrollTop <= mainContent.clientHeight + 10) {
+          currentId = 'section-security';
+        }
+
+        // 移除所有导航项的 active 状态，并高亮当前的 ID
+        navLinks.forEach(link => {
+          link.classList.remove('active');
+          if (link.getAttribute('href') === `#${currentId}`) {
+            link.classList.add('active');
+          }
+        });
+      });
+
+      // 2. 点击导航平滑滚动 (Smooth Scroll)
+      navLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+          e.preventDefault(); // 阻止原生的跳帧描点锚定
+          
+          const targetId = this.getAttribute('href');
+          const targetSection = document.querySelector(targetId);
+          
+          if(targetSection) {
+            // 命令右侧主内容区进行平滑滚动
+            mainContent.scrollTo({
+              top: targetSection.offsetTop,
+              behavior: 'smooth'
+            });
+          }
+        });
+      });
+
+      // ==========================================
+      // 新增：功能原型交互模拟
+      // ==========================================
+
+      // 3. 复制 API 密钥
+      const apiKeyInput = document.querySelector('.lcd-field');
+      if (apiKeyInput) {
+        const copyBtn = apiKeyInput.nextElementSibling;
+        if (copyBtn) {
+          copyBtn.addEventListener('click', function() {
+            const originalHTML = this.innerHTML;
+            this.innerHTML = '<svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg> 已复制';
+            this.style.color = 'var(--lcd-text-bright)';
+            this.style.borderColor = 'var(--lcd-text-bright)';
+            
+            setTimeout(() => {
+              this.innerHTML = originalHTML;
+              this.style.color = '';
+              this.style.borderColor = '';
+            }, 2000);
+          });
+        }
+      }
+
+      // 4. 按钮及表单动作模拟
+      document.querySelectorAll('.btn-primary').forEach(btn => {
+        if (btn.textContent.trim() === '保存系统配置') {
+          btn.addEventListener('click', function() {
+            const originalText = this.textContent;
+            this.textContent = '正在写入系统寄存器...';
+            this.style.opacity = '0.8';
+            this.style.pointerEvents = 'none';
+            
+            setTimeout(() => {
+              this.textContent = '✔ 配置已保存';
+              this.style.background = 'var(--lcd-text-dim)'; // 模拟成功状态色
+              
+              setTimeout(() => {
+                this.textContent = originalText;
+                this.style.background = '';
+                this.style.opacity = '1';
+                this.style.pointerEvents = 'auto';
+              }, 2000);
+            }, 800);
+          });
+        }
+        
+        if (btn.textContent.trim() === '更新密码') {
+          btn.addEventListener('click', () => {
+             const inputs = document.querySelectorAll('#section-security input[type="password"]');
+             let isEmpty = false;
+             inputs.forEach(input => { if(!input.value) isEmpty = true; });
+             
+             if (isEmpty) {
+                 alert('[SYS_ERR] 安全校验失败：请填写完整的密码字段。');
+             } else {
+                 alert('[SYS_AUTH] 安全密钥已成功更新！终端将记录此次操作。');
+                 inputs.forEach(input => input.value = ''); // 清空输入框
+             }
+          });
+        }
+      });
+
+      document.querySelectorAll('.btn-tool').forEach(btn => {
+        const text = btn.textContent.trim();
+        if (text === '撤销更改') {
+          btn.addEventListener('click', () => alert('[SYS_CMD] 已恢复至上一次保存的配置状态。'));
+        }
+        if (text === '取消') {
+          btn.addEventListener('click', () => {
+             const inputs = document.querySelectorAll('#section-security input[type="password"]');
+             inputs.forEach(input => input.value = '');
+          });
+        }
+        if (text.includes('更新操作员图像')) {
+          btn.addEventListener('click', () => alert('[SYS_CMD] 唤醒本地文件接口...'));
+        }
+        if (text === '升级配额限制') {
+          btn.addEventListener('click', () => alert('[QUOTA_SYS] 正在连接计费终端，获取最新升级方案...'));
+        }
+        if (text === '退出登录') {
+          btn.addEventListener('click', () => {
+             if (confirm('[SYS_WARN] 确认断开当前终端的安全连接？')) {
+                 alert('连接已断开，即将返回验证网关...');
+             }
+          });
+        }
+      });
+
+      // 5. 极度危险操作 (侧边栏与主区)
+      const btnDanger = document.querySelector('.btn-danger');
+      if (btnDanger) {
+        btnDanger.addEventListener('click', function() {
+          if (confirm('[CRITICAL_WARN] 极度危险操作！\n\n您正在尝试抹除操作员 [OPERATOR_01] 的所有数据及专属记忆槽位。此操作不可逆！\n\n是否强制执行？')) {
+            alert('[SYS_LOG] 账户擦除序列已启动...');
+          }
+        });
+      }
+
+      const logoutSidebar = document.querySelector('.logout-btn');
+      if (logoutSidebar) {
+        logoutSidebar.addEventListener('click', (e) => {
+          e.preventDefault();
+          if (confirm('[SYS_WARN] 确认断开当前终端的安全连接？')) {
+             alert('连接已断开，即将返回验证网关...');
+          }
+        });
+      }
+
+    });
+  </script>
+
+</body>
+</html>
