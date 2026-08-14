@@ -1,3 +1,4 @@
+export const maxDuration = 60; // 强制将 Vercel 的超时限制拉长到 Hobby 计划的最大值 60 秒
 export default async function handler(req, res) {
   // 只允许 POST 请求
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
