@@ -140,11 +140,12 @@ function Workspace() {
     setSysError(null);
 
     try {
-      const response = await fetch('/dify-api/v1/workflows/run', {
+      // 修改后的 triggerDiffEngine 请求
+      const response = await fetch('/api/tune', { // 指向我们刚才写的 tune.js
         method: 'POST',
         signal: controller.signal,
-        headers: { 
-          'Authorization': 'Bearer app-u8Pp7SixS7L5JraFPEhBYrfK',
+        headers: {
+          // ⚠️ 同样：前端不再暴露密钥！
           'Content-Type': 'application/json' 
         },
         body: JSON.stringify({
@@ -367,11 +368,12 @@ function Workspace() {
     const timeoutId = setTimeout(() => controller.abort(), 45000);
 
     try {
-      const response = await fetch('/dify-api/v1/workflows/run', {
+      // 修改后的 fetchData 请求
+      const response = await fetch('/api/generate', {  // 指向我们刚才写的 generate.js
         method: 'POST',
         signal: controller.signal,
         headers: {
-          'Authorization': 'Bearer app-ohequ4QpaSvQGIcYx7zGcOyc',
+          // ⚠️ 极其关键：这里不再写 Authorization 密钥了！
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
