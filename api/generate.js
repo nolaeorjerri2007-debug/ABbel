@@ -1,23 +1,53 @@
-export const maxDuration = 60; // 强制将 Vercel 的超时限制拉长到 Hobby 计划的最大值 60 秒
+import { createClient } from 'redis';
+
+export const maxDuration = 60; // 保持 60 秒续命补丁
+
 export default async function handler(req, res) {
-  // 只允许 POST 请求
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
+  // 1. 从前端请求中提取激活码和要处理的文案
+  const { code, inputs, response_mode, user } = req.body;
+
+  // 如果前端没传激活码，直接拦截
+  if (!code) {
+    return res.status(401).json({ error: '请输入有效的激活码！' });
+  }
+
+  // 2. 连接 Redis 数据库
+  const redis = createClient({ url: process.env.REDIS_URL });
+  await redis.connect();
+
   try {
-    // 这里是在 Vercel 服务器上向 Dify 发请求，前端看不到这段代码
-    const response = await fetch('https://api.dify.ai/v1/workflows/run', {
+    // 3. 查验余额
+    const balance = await redis.get(code);
+
+    if (!balance || parseInt(balance) <= 0) {
+      await redis.disconnect();
+      return res.status(403).json({ error: '激活码无效或额度已耗尽，请续费！' });
+    }
+
+    // 4. 额度充足，扣除 1 次
+    await redis.decr(code);
+    const newBalance = await redis.get(code); // 获取扣除后的最新余额
+    await redis.disconnect();
+
+    // 5. 余额扣除成功，放行调用 Dify
+    const difyResponse = await fetch('https://api.dify.ai/v1/workflows/run', {
       method: 'POST',
       headers: {
-        // 注意这里的 process.env.DIFY_TOKEN_GENERATE，它会去读取 Vercel 的保险箱
         'Authorization': `Bearer ${process.env.DIFY_TOKEN_GENERATE}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(req.body) // 把前端传过来的要求直接转发给 Dify
+      body: JSON.stringify({ inputs, response_mode, user })
     });
+    
+    const data = await difyResponse.json();
+    
+    // 6. 将 Dify 的结果和剩余额度一起返回给前端
+    res.status(200).json({ ...data, remaining_balance: newBalance });
 
-    const data = await response.json();
-    res.status(200).json(data); // 把 Dify 的回答原样返回给前端
   } catch (error) {
-    res.status(500).json({ error: '后端代理请求失败' });
+    await redis.disconnect();
+    res.status(500).json({ error: '服务器鉴权失败', details: error.message });
   }
 }

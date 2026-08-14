@@ -368,6 +368,17 @@ function Workspace() {
     const timeoutId = setTimeout(() => controller.abort(), 45000);
 
     try {
+      // --- 新增：激活码校验逻辑 ---
+      let userCode = localStorage.getItem('abbel_code');
+      if (!userCode) {
+        userCode = prompt('欢迎使用 Abbel！请输入您的内测激活码：');
+        if (!userCode) {
+          alert('必须输入激活码才能使用哦！');
+          return; // 用户没输，终止请求
+        }
+        localStorage.setItem('abbel_code', userCode); // 记住激活码，下次不用重输
+      }
+      // ----------------------------
       // 修改后的 fetchData 请求
       const response = await fetch('/api/generate', {  // 指向我们刚才写的 generate.js
         method: 'POST',
@@ -377,11 +388,21 @@ function Workspace() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
+          code: userCode, // 把激活码传给后端检票机！
           inputs: { input_text: query },
           response_mode: 'blocking',
           user: 'web-user'
         })
       })
+
+      // --- 新增：处理余额不足或假码的情况 ---
+      if (response.status === 401 || response.status === 403) {
+        const errData = await response.json();
+        alert(errData.error); // 弹出报错信息
+        localStorage.removeItem('abbel_code'); // 清除掉无效的旧码
+        return;
+      }
+      // ------------------------------------
 
       if (!response.ok) throw new Error(`HTTP ${response.status}`)
 
