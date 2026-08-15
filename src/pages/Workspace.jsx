@@ -810,7 +810,7 @@ function Workspace() {
             ) : diffDraft ? (
               <div className="fade-in-diff">
                 <div className="terminal-text success" style={{ marginBottom: '4px', color: 'var(--color-accent-primary)' }}>
-                  > 语义重构完成：已生成参数对比视图
+                  {'>'} 语义重构完成：已生成参数对比视图
                 </div>
                 <div className="terminal-text diagnosis" style={{ color: 'var(--color-text-secondary)', fontSize: '12px', marginBottom: '16px', opacity: 0.8 }}>
                   {diagnosis}
@@ -824,7 +824,7 @@ function Workspace() {
             ) : draft && draft.trim().length >= 5 ? (
               <div className="fade-in-diff">
                 <div className="terminal-text success" style={{ marginBottom: '4px' }}>
-                  > 解析成功：已生成最优文案
+                  {'>'} 解析成功：已生成最优文案
                 </div>
                 <div className="terminal-text diagnosis" style={{ 
                   color: 'var(--color-text-secondary)', 
@@ -840,7 +840,7 @@ function Workspace() {
               </div>
             ) : (
               <div className="terminal-text warning">
-                > 等待输入有效需求后自动生成...
+                {'>'} 等待输入有效需求后自动生成...
               </div>
             )}
 
