@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useSignIn } from '@clerk/clerk-react';
+import { SignUpButton } from '@clerk/clerk-react';
 import { useNavigate } from 'react-router-dom';
 import logo from '../assets/logo2.0.png'; 
 import './Login.css';
@@ -204,7 +205,9 @@ export default function Login() {
         {/* ✅ 修复 3：强制去除此处的顶部虚线 (borderTop: 'none') */}
         <div className="auth-footer" style={{ borderTop: 'none' }}>
           <span className="register-text">还没有帐户？</span>
-          <a href="#" className="register-link" onClick={(e) => { e.preventDefault(); alert('请联系管理员或前往后台开通'); }}>立即注册</a>
+          <SignUpButton mode="modal" fallbackRedirectUrl="/">
+            <span className="register-link" style={{ cursor: 'pointer' }}>立即注册</span>
+          </SignUpButton>
         </div>
       </div>
 
