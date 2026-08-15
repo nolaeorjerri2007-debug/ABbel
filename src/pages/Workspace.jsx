@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '@clerk/clerk-react'
 import { useNavigate } from 'react-router-dom'
+import ExportModal from './ExportModal'
 
 const SLIDER_CONFIG = [
   {
@@ -57,6 +58,7 @@ function Workspace() {
   const [showAppendInput, setShowAppendInput] = useState(false);
   const [appendQuery, setAppendQuery] = useState('');
   const [history, setHistory] = useState([]);
+  const [isExportOpen, setIsExportOpen] = useState(false);
 
   // ⚠️ 新增悬浮菜单相关状态
   const [savedTemplates, setSavedTemplates] = useState([]);
@@ -393,17 +395,21 @@ function Workspace() {
       let mappedScores = baseScoresRef.current || {}; // 降级时保留原有滑块参数
 
       try {
-        // 尝试按严格的 JSON 格式解析
-        parsed = JSON.parse(cleanedText);
-        finalDraft = parsed.draft || parsed.text || parsed.content || cleanedText; // 多重字段兜底
+        // 🚀 强力护盾：使用正则精准提取大括号内的核心 JSON，过滤前后的废话
+        const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
+        const stringToParse = jsonMatch ? jsonMatch[0] : cleanedText;
+        
+        parsed = JSON.parse(stringToParse);
+        
+        finalDraft = parsed.draft || parsed.text || parsed.content || stringToParse;
         diagText = parsed.diagnosis || diagText;
         const scoresData = parsed.scores || parsed;
         mappedScores = mapScoresToSliders(scoresData);
       } catch (e) {
-        // 【兼容模式】如果 AI 不听话直接吐了纯文本，我们就直接拿纯文本当底稿！
-        console.warn('>>> [主引擎兼容模式] AI 未返回标准 JSON，直接渲染纯文本');
+        // 【兼容模式】如果连正则提取后都无法 Parse（比如被严重截断），再降级为纯文本
+        console.warn('>>> [主引擎兼容模式] JSON 解析彻底失败，降级为纯文本渲染', e);
         finalDraft = cleanedText;
-        diagText = '> 诊断：检测到引擎返回纯文本模式，已自动降级兼容渲染。';
+        diagText = '> 诊断：检测到引擎返回纯文本模式或数据破损，已自动降级。';
       }
 
       if (finalDraft.trim().length < 5) {
@@ -900,10 +906,9 @@ function Workspace() {
               <button className="btn-tool" onClick={handleSaveTemplate}>保存为专属模板</button>
               <button 
                 className="btn-primary" 
-                onClick={handleCopyAndEnd}
-                disabled={!draft || loading || isDiffLoading}
+                onClick={() => setIsExportOpen(true)}
               >
-                一键复制全文
+                导出图文
               </button>
             </div>
           </div>
@@ -1151,6 +1156,13 @@ function Workspace() {
           </div>
         </div>
       </div>
+
+      <ExportModal 
+        isOpen={isExportOpen} 
+        onClose={() => setIsExportOpen(false)}
+        rawText={currentDraftRef.current}
+        parameters={stagedParams}
+      />
     </div>
   )
 }
