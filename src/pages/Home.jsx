@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import logo from '../assets/logo2.0.png'
+// 👉 新增：引入 Clerk 的 UserButton 组件
+import { UserButton } from '@clerk/clerk-react'
 
 const SUGGESTION_CHIPS = [
   '💄 变身小红书爆文',
@@ -199,9 +201,22 @@ function Home() {
       <div className="screw"></div><div className="screw"></div>
       <div className="screw"></div><div className="screw"></div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+      {/* 替换首页顶部的标题栏 */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
         <span className="nameplate" style={{ width: 'auto' }}>[ ABBEL -01 / 筑达每次沟通 ]</span>
-        <span className="nameplate" style={{ width: 'auto' }}>V4.0 // TRANSLUCENT_PRECISION</span>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <span className="nameplate" style={{ width: 'auto' }}>V4.0 // TRANSLUCENT_PRECISION</span>
+          {/* 👉 新增：Clerk 魔法头像组件 */}
+          <UserButton
+            afterSignOutUrl="/login"
+            appearance={{
+              elements: {
+                avatarBox: "w-8 h-8 border-2 border-[rgba(255,255,255,0.5)] shadow-lg" // 让头像带点玻璃质感的边框
+              }
+            }}
+          />
+        </div>
       </div>
 
       <div className="bento-grid">

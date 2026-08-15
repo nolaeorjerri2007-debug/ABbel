@@ -7,7 +7,7 @@
 - **请求方式**：POST
 - **URL**：/dify-api/v1/workflows/run
 - **Headers**：
-  - Authorization: Bearer app-ohequ4QpaSvQGIcYx7zGcOyc
+  - Authorization: Bearer <请从后端环境变量 DIFY_TOKEN_GENERATE 读取，禁止明文暴露密钥>
   - Content-Type: application/json
 - **入参 (Body)**：
   ```json

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useAuth } from '@clerk/clerk-react'
 import { useNavigate } from 'react-router-dom'
 
 // 原生防抖辅助函数
@@ -45,6 +46,7 @@ const ADVANCED_SLIDERS = [
 ]
 
 function Workspace() {
+  const { getToken } = useAuth()
   const navigate = useNavigate()
 
   const [draft, setDraft] = useState('')
@@ -123,7 +125,7 @@ function Workspace() {
   // 抽离的独立发包引擎：AUTO 和 Manual 共用
   const triggerDiffEngine = async (changedParams, changedCount) => {
     if (changedCount === 0) return null;
-    // 前端最后一道物理防线：如果底稿为空，说明前置流程异常，直接拒绝发包
+
     if (!currentDraftRef.current || currentDraftRef.current.trim() === '') {
       console.warn('>>> [AUTO 引擎拦截] 当前无有效底稿，拒绝重写请求');
       return null;
@@ -140,14 +142,17 @@ function Workspace() {
     setSysError(null);
 
     try {
-      // 修改后的 triggerDiffEngine 请求
-      const response = await fetch('/api/tune', { // 指向我们刚才写的 tune.js
+      // 🚀 获取 Clerk 的活体通行证！
+      const token = await getToken();
+
+      const response = await fetch('/api/tune', {
         method: 'POST',
         signal: controller.signal,
         headers: {
-          // ⚠️ 同样：前端不再暴露密钥！
-          'Content-Type': 'application/json' 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` // 👈 将通行证塞入请求头
         },
+        // 🗑️ 注意：这里的 code: userCode 已经被我无情删除了！
         body: JSON.stringify({
           inputs: {
             original_text: currentDraftRef.current,
@@ -161,16 +166,24 @@ function Workspace() {
           user: 'web-user'
         })
       });
+
+      // --- 处理余额不足或身份伪造的情况 ---
+      if (response.status === 401 || response.status === 403) {
+        const errData = await response.json();
+        showToast(errData.error);
+        return null;
+      }
+      // ------------------------------------
+
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
-      // 兼容后端可能变更的字段名 (text 或 diff_text)
+
       const rawText = data?.data?.outputs?.diff_text || data?.data?.outputs?.text || data?.answer || '';
 
       if (!rawText) {
         throw new Error('未提取到有效的重写文本');
       }
 
-      // 第一道防线：粗粒度清洗思考过程和代码块标记
       let cleanedText = rawText
         .replace(/<think>[\s\S]*?<\/think>/gi, '')
         .replace(/```json/gi, '')
@@ -180,7 +193,6 @@ function Workspace() {
 
       let finalDiffText = cleanedText;
 
-      // 第二道防线：尝试深度解析 JSON 对象
       try {
         const parsed = JSON.parse(cleanedText);
 
@@ -368,38 +380,27 @@ function Workspace() {
     const timeoutId = setTimeout(() => controller.abort(), 45000);
 
     try {
-      // --- 新增：激活码校验逻辑 ---
-      let userCode = localStorage.getItem('abbel_code');
-      if (!userCode) {
-        userCode = prompt('欢迎使用 Abbel！请输入您的内测激活码：');
-        if (!userCode) {
-          alert('必须输入激活码才能使用哦！');
-          return; // 用户没输，终止请求
-        }
-        localStorage.setItem('abbel_code', userCode); // 记住激活码，下次不用重输
-      }
-      // ----------------------------
-      // 修改后的 fetchData 请求
+      // 👉 从 Clerk 获取当前用户的动态令牌
+      const token = await getToken();
       const response = await fetch('/api/generate', {  // 指向我们刚才写的 generate.js
         method: 'POST',
         signal: controller.signal,
         headers: {
-          // ⚠️ 极其关键：这里不再写 Authorization 密钥了！
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          // 👉 把令牌作为 Authorization 表头传入后端
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          code: userCode, // 把激活码传给后端检票机！
           inputs: { input_text: query },
           response_mode: 'blocking',
           user: 'web-user'
         })
       })
 
-      // --- 新增：处理余额不足或假码的情况 ---
+      // --- 处理余额不足或权限不足的情况 ---
       if (response.status === 401 || response.status === 403) {
         const errData = await response.json();
         alert(errData.error); // 弹出报错信息
-        localStorage.removeItem('abbel_code'); // 清除掉无效的旧码
         return;
       }
       // ------------------------------------
@@ -419,20 +420,31 @@ function Workspace() {
         .replace(/```/gi, '')
         .trim()
 
-      const parsed = JSON.parse(cleanedText)
-      const finalDraft = parsed.draft || ''
+      let finalDraft = '';
+      let parsed = {};
+      let diagText = '> 诊断：已提取核心诉求，并自动套用 [平衡沟通] 预设。你可以随时拖动右侧滑块打破预设。';
+      let mappedScores = baseScoresRef.current || {}; // 降级时保留原有滑块参数
+
+      try {
+        // 尝试按严格的 JSON 格式解析
+        parsed = JSON.parse(cleanedText);
+        finalDraft = parsed.draft || parsed.text || parsed.content || cleanedText; // 多重字段兜底
+        diagText = parsed.diagnosis || diagText;
+        const scoresData = parsed.scores || parsed;
+        mappedScores = mapScoresToSliders(scoresData);
+      } catch (e) {
+        // 【兼容模式】如果 AI 不听话直接吐了纯文本，我们就直接拿纯文本当底稿！
+        console.warn('>>> [主引擎兼容模式] AI 未返回标准 JSON，直接渲染纯文本');
+        finalDraft = cleanedText;
+        diagText = '> 诊断：检测到引擎返回纯文本模式，已自动降级兼容渲染。';
+      }
 
       if (finalDraft.trim().length < 5) {
-        setSysError('> SYS_ERR: 引擎未能推演出有效文案')
+        setSysError('> SYS_ERR: 引擎未能推演出有效文案');
       } else {
         setDraft(finalDraft);
         currentDraftRef.current = finalDraft;
-
-        const diagText = parsed.diagnosis || '> 诊断：已提取核心诉求，并自动套用 [平衡沟通] 预设。你可以随时拖动右侧滑块打破预设。';
         setDiagnosis(diagText);
-
-        const scoresData = parsed.scores || parsed;
-        const mappedScores = mapScoresToSliders(scoresData);
         setScores(mappedScores);
         baseScoresRef.current = mappedScores;
 

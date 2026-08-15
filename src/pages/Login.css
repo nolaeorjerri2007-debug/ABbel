@@ -1,0 +1,158 @@
+/* ========================================
+   src/Login.css (作用域隔离版)
+   ======================================== */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+/* 将原本的 :root 变量和 body 样式，全部锁死在这个 wrapper 内 */
+.abbel-login-wrapper {
+  --color-bg-body: #ECE9E2;
+  --glass-panel: rgba(220, 216, 206, 0.65);
+  --glass-module: rgba(244, 241, 235, 0.4);
+  --glass-border: rgba(255, 255, 255, 0.5);
+  --color-border-dark: rgba(0,0,0,0.15);
+  --color-text-title: #111110;
+  --color-text-primary: #2C2A28;
+  --color-text-secondary: #706D66;
+  --color-accent-primary: #D13E14;
+  --font-sans: 'Noto Sans SC', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --lcd-bg: rgba(26, 29, 26, 0.95);
+  --lcd-text-bright: #66FF88;
+  --lcd-text-dim: #4B5E4B;
+  --lcd-text-amber: #FFB340;
+  --lcd-text-danger: #FF4444;
+  --led-off: #2C2C2C;
+  --led-red: #FF3333;
+  --led-green: #33FF55;
+  --shadow-panel: 0 40px 80px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.02);
+  --shadow-emboss: inset 0 1px 0 rgba(255,255,255,0.6), 0 4px 10px rgba(0,0,0,0.03);
+  --shadow-recess: inset 0 2px 6px rgba(0,0,0,0.15), inset 0 0 0 1px rgba(0,0,0,0.05);
+  --shadow-lcd: inset 0 4px 12px rgba(0,0,0,0.8), 0 2px 0 rgba(255,255,255,0.3);
+  --blur-intensity: blur(20px);
+
+  /* 原本的 body 样式 */
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--color-bg-body);
+  background-image: 
+    radial-gradient(circle at 50% 50%, rgba(209, 62, 20, 0.05), transparent 60%),
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+  font-family: var(--font-sans);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  z-index: 9999;
+}
+
+.abbel-login-wrapper * { box-sizing: border-box; }
+
+/* 修复了 Logo 显示的 Bug */
+.abbel-login-wrapper .brand-backdrop {
+  position: absolute;
+  top: 10%;
+  text-align: center;
+  z-index: 0;
+  pointer-events: none;
+}
+.abbel-login-wrapper .brand-backdrop h1 {
+  font-size: 36px;
+  font-weight: 900;
+  color: rgba(0,0,0,0.75);
+  margin: 0 0 8px 0;
+  letter-spacing: 2px;
+}
+.abbel-login-wrapper .brand-backdrop p {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(0,0,0,0.4);
+  margin: 0;
+  letter-spacing: 1px;
+}
+
+/* 面板及以下样式原样保留，加上前缀确保安全 */
+.abbel-login-wrapper .auth-panel {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 440px;
+  background: var(--glass-panel);
+  backdrop-filter: var(--blur-intensity);
+  -webkit-backdrop-filter: var(--blur-intensity);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-panel);
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+}
+
+.abbel-login-wrapper .screw {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: linear-gradient(135deg, #E0DCD2 0%, #908D85 100%);
+  box-shadow: inset 0 1px 2px rgba(255,255,255,0.8), 0 1px 2px rgba(0,0,0,0.4);
+  position: absolute; display: flex; align-items: center; justify-content: center;
+}
+.abbel-login-wrapper .screw::after { content: ''; width: 4px; height: 4px; border-radius: 50%; background: #4A4844; box-shadow: inset 0 1px 2px rgba(0,0,0,0.8); }
+.abbel-login-wrapper .screw:nth-of-type(1) { top: 16px; left: 16px; }
+.abbel-login-wrapper .screw:nth-of-type(2) { top: 16px; right: 16px; }
+.abbel-login-wrapper .screw:nth-of-type(3) { bottom: 16px; left: 16px; }
+.abbel-login-wrapper .screw:nth-of-type(4) { bottom: 16px; right: 16px; }
+
+.abbel-login-wrapper .lcd-display {
+  background: var(--lcd-bg); border: 2px solid #111; border-radius: 8px;
+  box-shadow: var(--shadow-lcd); padding: 16px; margin-bottom: 32px; position: relative; overflow: hidden;
+}
+.abbel-login-wrapper .lcd-display::before {
+  content: " "; display: block; position: absolute; top: 0; left: 0; bottom: 0; right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 255, 0, 0.06));
+  z-index: 2; background-size: 100% 4px, 6px 100%; pointer-events: none;
+}
+.abbel-login-wrapper .lcd-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed var(--lcd-text-dim); padding-bottom: 8px; margin-bottom: 12px; }
+.abbel-login-wrapper .lcd-title { font-family: var(--font-mono); font-size: 10px; color: var(--lcd-text-amber); letter-spacing: 0.1em; }
+.abbel-login-wrapper .lcd-status { display: flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 10px; color: var(--lcd-text-danger); }
+.abbel-login-wrapper .led-pulse { width: 6px; height: 6px; border-radius: 50%; background: var(--led-red); box-shadow: 0 0 6px var(--led-red); animation: pulse 1s infinite; }
+@keyframes pulse { 0% { opacity: 0.3; } 50% { opacity: 1; } 100% { opacity: 0.3; } }
+
+.abbel-login-wrapper .lcd-body { font-family: var(--font-mono); font-size: 13px; color: var(--lcd-text-bright); line-height: 1.6; text-shadow: 0 0 4px rgba(102, 255, 136, 0.4); }
+.abbel-login-wrapper .lcd-dim { color: var(--lcd-text-dim); text-shadow: none; }
+.abbel-login-wrapper .cursor { display: inline-block; width: 8px; height: 14px; background: var(--lcd-text-bright); vertical-align: middle; animation: blink 1s step-end infinite; margin-left: 4px; }
+@keyframes blink { 50% { opacity: 0; } }
+
+.abbel-login-wrapper .form-group { margin-bottom: 20px; display: flex; flex-direction: column; }
+.abbel-login-wrapper .form-label { font-size: 13px; font-weight: 700; color: var(--color-text-title); margin-bottom: 8px; }
+.abbel-login-wrapper .input-wrapper { position: relative; display: flex; align-items: center; }
+.abbel-login-wrapper .input-icon { position: absolute; left: 12px; width: 16px; height: 16px; stroke: var(--color-text-secondary); fill: none; stroke-width: 2; pointer-events: none; }
+.abbel-login-wrapper .form-input { width: 100%; background: rgba(0,0,0,0.04); border: 1px solid var(--color-border-dark); padding: 12px 16px 12px 36px; border-radius: 6px; font-family: var(--font-sans); font-size: 14px; color: var(--color-text-primary); box-shadow: var(--shadow-recess); outline: none; transition: all 0.2s; }
+.abbel-login-wrapper .form-input:focus { background: rgba(255,255,255,0.6); border-color: var(--color-accent-primary); box-shadow: 0 0 0 3px rgba(209, 62, 20, 0.1), var(--shadow-recess); }
+.abbel-login-wrapper .form-input::placeholder { color: rgba(0,0,0,0.3); font-weight: 500; }
+.abbel-login-wrapper .btn-visibility { position: absolute; right: 12px; background: none; border: none; padding: 0; cursor: pointer; color: var(--color-text-secondary); display: flex; align-items: center; justify-content: center; }
+.abbel-login-wrapper .btn-visibility:hover { color: var(--color-text-primary); }
+.abbel-login-wrapper .btn-visibility svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
+
+.abbel-login-wrapper .auth-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; margin-bottom: 32px; }
+.abbel-login-wrapper .pref-row { display: flex; align-items: center; gap: 12px; }
+.abbel-login-wrapper .pref-info { font-size: 13px; font-weight: 600; color: var(--color-text-secondary); }
+.abbel-login-wrapper .toggle-checkbox { display: none; }
+.abbel-login-wrapper .toggle-label { width: 44px; height: 24px; background: rgba(0,0,0,0.1); border-radius: 12px; border: 1px solid rgba(0,0,0,0.15); box-shadow: inset 0 2px 5px rgba(0,0,0,0.2); cursor: pointer; position: relative; transition: all 0.3s; display: flex; align-items: center; }
+.abbel-login-wrapper .toggle-thumb { width: 18px; height: 18px; background: linear-gradient(180deg, #FFFFFF 0%, #DCD8CE 100%); border-radius: 50%; position: absolute; left: 2px; box-shadow: 0 2px 4px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.8); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+.abbel-login-wrapper .toggle-checkbox:checked + .toggle-label { background: rgba(209, 62, 20, 0.15); border-color: rgba(209, 62, 20, 0.3); box-shadow: inset 0 2px 5px rgba(209, 62, 20, 0.2); }
+.abbel-login-wrapper .toggle-checkbox:checked + .toggle-label .toggle-thumb { left: 22px; }
+.abbel-login-wrapper .text-link { font-size: 13px; font-weight: 600; color: var(--color-text-secondary); text-decoration: none; transition: color 0.2s; }
+.abbel-login-wrapper .text-link:hover { color: var(--color-text-primary); }
+
+.abbel-login-wrapper .btn-exec { width: 100%; background: var(--color-accent-primary); color: white; border: none; padding: 16px; border-radius: 6px; font-size: 16px; font-weight: 900; letter-spacing: 2px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), 0 6px 12px rgba(209, 62, 20, 0.25); cursor: pointer; transition: all 0.1s; position: relative; display: flex; justify-content: center; align-items: center; gap: 8px; }
+.abbel-login-wrapper .btn-exec::before { content: '[ AUTH ]'; position: absolute; top: 6px; left: 8px; font-family: var(--font-mono); font-size: 9px; color: rgba(255,255,255,0.4); letter-spacing: 0; }
+.abbel-login-wrapper .btn-exec:hover { filter: brightness(1.05); transform: translateY(-1px); }
+.abbel-login-wrapper .btn-exec:active { transform: translateY(3px); box-shadow: inset 0 3px 6px rgba(0,0,0,0.4); }
+
+.abbel-login-wrapper .auth-footer { margin-top: 24px; text-align: center; border-top: 1px dashed var(--color-border-dark); padding-top: 24px; }
+.abbel-login-wrapper .register-text { font-size: 13px; color: var(--color-text-secondary); }
+.abbel-login-wrapper .register-link { font-weight: 700; color: var(--color-text-primary); text-decoration: none; margin-left: 4px; padding: 4px 8px; background: rgba(255,255,255,0.4); border: 1px solid var(--color-border-dark); border-radius: 4px; box-shadow: var(--shadow-emboss); transition: all 0.2s; }
+.abbel-login-wrapper .register-link:hover { background: rgba(255,255,255,0.7); }
+.abbel-login-wrapper .register-link:active { box-shadow: var(--shadow-recess); transform: translateY(1px); }
+.abbel-login-wrapper .system-footer-text { position: absolute; bottom: 24px; font-family: var(--font-mono); font-size: 10px; color: rgba(0,0,0,0.3); text-transform: uppercase; letter-spacing: 1px; }
