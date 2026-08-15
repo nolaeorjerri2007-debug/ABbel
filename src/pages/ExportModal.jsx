@@ -89,15 +89,16 @@ export default function ExportModal({ isOpen, onClose, rawText, parameters }) {
                 ref={posterRef}
                 className={`poster-canvas ratio-${aspectRatio.replace(':', '-')} theme-${theme.toLowerCase()}`}
               >
+                {/* 增加背景纹理装饰 */}
+                <div className="poster-noise-overlay"></div>
+                
                 <div className="poster-image-area" onClick={() => !uploadedImage && fileInputRef.current.click()}>
                   {uploadedImage ? (
-                    <>
-                      <img src={uploadedImage} alt="Uploaded" className="poster-img" />
-                      <div className="poster-img-gradient"></div>
-                    </>
+                    <img src={uploadedImage} alt="Uploaded" className="poster-img" />
                   ) : (
                     <div className="poster-placeholder">
-                      <span>点击或拖拽上传产品图片</span>
+                      <span className="tech-brackets">[ IMAGE_SLOT ]</span>
+                      <span style={{marginTop: '8px', opacity: 0.5}}>点击或拖拽植入影像</span>
                     </div>
                   )}
                   <input 
@@ -108,11 +109,16 @@ export default function ExportModal({ isOpen, onClose, rawText, parameters }) {
                     style={{ display: 'none' }} 
                   />
                 </div>
+
                 <div className="poster-text-area">
+                  {/* 装饰性引言符号与边框 */}
+                  <div className="text-area-decoration"></div>
                   <p className="poster-copy">{cleanText}</p>
+                  
                   {showWatermark && (
                     <div className="poster-watermark">
-                      {getWatermarkString()}
+                      <div className="watermark-line"></div>
+                      <span className="watermark-text">{getWatermarkString()}</span>
                     </div>
                   )}
                 </div>

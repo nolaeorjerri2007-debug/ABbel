@@ -906,6 +906,7 @@ function Workspace() {
               <button className="btn-tool" onClick={handleSaveTemplate}>保存为专属模板</button>
               <button 
                 className="btn-primary" 
+                style={{ padding: '6px 16px', fontSize: '12px' }}
                 onClick={() => setIsExportOpen(true)}
               >
                 导出图文

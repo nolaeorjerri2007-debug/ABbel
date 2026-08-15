@@ -1,301 +1,212 @@
-/* 基础覆盖与极简定义 */
+/* ==================== 极简与暗黑透明美学 ==================== */
 :root {
-  --modal-bg: #f9f9f9;
-  --panel-bg: #ffffff;
-  --border-color: #e0e0e0;
-  --text-main: #1a1a1a;
-  --text-muted: #888888;
-  --accent-color: #1a1a1a;
+  --modal-overlay: rgba(15, 15, 18, 0.75);
+  --modal-bg: rgba(30, 30, 35, 0.85); /* 沉浸式暗色毛玻璃 */
+  --modal-border: rgba(255, 255, 255, 0.1);
+  --text-primary: #ffffff;
+  --text-muted: rgba(255, 255, 255, 0.5);
+  --accent-color: #ff6b4a; /* 你的品牌橘红色 */
   --font-stack: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
 }
 
-/* 遮罩层 - 深色高斯模糊 */
+/* 遮罩层 */
 .abbel-modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  background: var(--modal-overlay);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  display: flex; align-items: center; justify-content: center;
   z-index: 9999;
+  animation: modalFadeIn 0.3s ease-out;
 }
 
-/* 弹窗主体容器 */
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* 弹窗主体容器 (融入工作台风格) */
 .abbel-modal-container {
   display: flex;
-  width: 900px;
-  height: 640px;
-  background: var(--panel-bg);
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.1);
+  width: 960px;
+  height: 680px;
+  background: var(--modal-bg);
+  border: 1px solid var(--modal-border);
+  border-radius: 16px;
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.1);
   overflow: hidden;
   font-family: var(--font-stack);
+  color: var(--text-primary);
 }
 
-/* ==================== 左侧：预览区 ==================== */
+/* ==================== 左侧：高级预览区 ==================== */
 .abbel-modal-preview {
   flex: 6;
-  background: #f0f0f0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background: rgba(0, 0, 0, 0.2);
+  display: flex; align-items: center; justify-content: center;
   position: relative;
-  overflow-y: auto;
-  padding: 40px;
 }
 
-/* 纯文本模式预览 */
-.preview-text-only {
-  background: #fff;
-  padding: 40px;
-  width: 100%;
-  max-width: 400px;
-  border: 1px solid var(--border-color);
-  font-size: 15px;
-  line-height: 1.8;
-  color: var(--text-main);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-}
-
-/* 海报画布外壳，用于居中缩放显示 */
-.poster-workspace {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* 海报实体 (将通过 html2canvas 截取) */
+/* 海报实体 */
 .poster-canvas {
-  width: 100%;
+  position: relative;
   background: #ffffff;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+  display: flex; flex-direction: column;
+  box-shadow: 0 24px 48px rgba(0,0,0,0.3);
   overflow: hidden;
 }
 
-/* 比例约束 */
-.poster-canvas.ratio-3-4 { aspect-ratio: 3/4; max-width: 360px; }
-.poster-canvas.ratio-1-1 { aspect-ratio: 1/1; max-width: 420px; }
-
-/* 海报主题变量注入 */
+/* 宣纸白与终端黑的主题定义 */
 .poster-canvas.theme-light {
-  --poster-bg: #ffffff;
+  --poster-bg: #F8F9FA;
   --poster-text: #1a1a1a;
-  --poster-muted: #999999;
+  --poster-muted: #888888;
+  --poster-accent: #e5e5e5;
 }
 .poster-canvas.theme-dark {
-  --poster-bg: #111111;
-  --poster-text: #f0f0f0;
+  --poster-bg: #0F0F11;
+  --poster-text: #F8F9FA;
   --poster-muted: #666666;
+  --poster-accent: #2a2a2a;
 }
 
-/* 海报内部结构 */
+.poster-canvas.ratio-3-4 { aspect-ratio: 3/4; max-width: 380px; width: 100%; }
+.poster-canvas.ratio-1-1 { aspect-ratio: 1/1; max-width: 460px; width: 100%; }
+
+/* 海报背景杂色 (增加质感) */
+.poster-noise-overlay {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 1;
+}
+
+/* 图像区 */
 .poster-image-area {
   flex: 1.2;
-  background: #e8e8e8;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  overflow: hidden;
+  background: var(--poster-accent);
+  position: relative; z-index: 2;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; overflow: hidden;
 }
+
+.poster-img { width: 100%; height: 100%; object-fit: cover; }
 
 .poster-placeholder {
-  font-size: 13px;
-  color: #999;
-  border: 1px dashed #ccc;
-  padding: 20px 40px;
+  display: flex; flex-direction: column; align-items: center;
+  font-size: 12px; color: var(--poster-muted);
   letter-spacing: 1px;
 }
+.tech-brackets { font-family: monospace; font-size: 14px; opacity: 0.7; }
 
-.poster-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-/* 图像底部的柔和渐变过渡，无缝衔接文字区 */
-.poster-img-gradient {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 40%;
-  background: linear-gradient(to bottom, transparent, var(--poster-bg));
-  pointer-events: none;
-}
-
+/* 文本区 (打破平庸，制造悬浮交错感) */
 .poster-text-area {
   flex: 0.8;
   background: var(--poster-bg);
-  padding: 24px 32px 32px 32px;
-  display: flex;
-  flex-direction: column;
+  /* 解决顶部留白不够的问题，增加巨大留白 */
+  padding: 48px 40px 40px 40px; 
+  display: flex; flex-direction: column;
+  position: relative; z-index: 3;
+  /* 让文字区向上侵入图片区 16px，产生设计感 */
+  margin-top: -16px; 
+  border-top-left-radius: 16px; 
+  border-top-right-radius: 16px;
+}
+
+/* 左上角极简修饰线 */
+.text-area-decoration {
+  position: absolute; top: 24px; left: 40px;
+  width: 24px; height: 2px;
+  background: var(--poster-text); opacity: 0.2;
 }
 
 .poster-copy {
   color: var(--poster-text);
-  font-size: 14px;
-  line-height: 1.85;
-  margin: 0;
-  flex-grow: 1;
+  font-size: 15px; line-height: 1.8;
+  margin: 0; flex-grow: 1;
   text-align: justify;
-}
-
-.poster-watermark {
-  margin-top: 20px;
-  padding-top: 12px;
-  border-top: 1px solid rgba(128, 128, 128, 0.2);
-  font-size: 9px;
-  color: var(--poster-muted);
-  font-family: monospace;
   letter-spacing: 0.5px;
+  font-weight: 400;
 }
 
-/* ==================== 右侧：控制台区 ==================== */
+/* 极客水印区 */
+.poster-watermark {
+  margin-top: 32px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.watermark-line { width: 100%; height: 1px; background: var(--poster-text); opacity: 0.1; }
+.watermark-text {
+  font-size: 9px; color: var(--poster-muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  letter-spacing: 0.5px; line-height: 1.4;
+}
+
+/* ==================== 右侧：极简控制台 ==================== */
 .abbel-modal-sidebar {
   flex: 4;
-  background: var(--panel-bg);
-  border-left: 1px solid var(--border-color);
-  display: flex;
-  flex-direction: column;
+  background: rgba(255, 255, 255, 0.03);
+  border-left: 1px solid var(--modal-border);
+  display: flex; flex-direction: column;
 }
 
 .sidebar-header {
-  padding: 24px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid var(--border-color);
+  padding: 24px 32px;
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px solid var(--modal-border);
 }
+.sidebar-header h3 { margin: 0; font-size: 13px; font-weight: 500; letter-spacing: 1px; opacity: 0.8; }
+.btn-close { background: none; border: none; font-size: 12px; color: var(--text-muted); cursor: pointer; transition: 0.2s; }
+.btn-close:hover { color: var(--text-primary); }
 
-.sidebar-header h3 {
-  margin: 0;
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: 1px;
-  color: var(--text-main);
-}
-
-.btn-close {
-  background: none;
-  border: none;
-  font-size: 12px;
-  color: var(--text-muted);
-  cursor: pointer;
-}
-
-.btn-close:hover { color: var(--text-main); }
-
-.sidebar-tabs {
-  display: flex;
-  border-bottom: 1px solid var(--border-color);
-}
-
+.sidebar-tabs { display: flex; border-bottom: 1px solid var(--modal-border); }
 .sidebar-tabs button {
-  flex: 1;
-  background: none;
-  border: none;
-  padding: 16px 0;
-  font-size: 13px;
-  color: var(--text-muted);
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
-  transition: all 0.2s;
+  flex: 1; background: none; border: none;
+  padding: 18px 0; font-size: 13px; color: var(--text-muted);
+  cursor: pointer; position: relative; transition: 0.3s;
+}
+.sidebar-tabs button.tab-active { color: var(--text-primary); font-weight: 500; }
+.sidebar-tabs button.tab-active::after {
+  content: ''; position: absolute; bottom: -1px; left: 20%; width: 60%; height: 1px;
+  background: var(--text-primary); box-shadow: 0 -2px 8px rgba(255,255,255,0.5);
 }
 
-.sidebar-tabs button.tab-active {
-  color: var(--text-main);
-  font-weight: 600;
-  border-bottom: 2px solid var(--text-main);
-}
+.sidebar-controls { padding: 32px; flex-grow: 1; overflow-y: auto; }
 
-.sidebar-controls {
-  padding: 24px;
-  flex-grow: 1;
-  overflow-y: auto;
-}
-
-.control-group {
-  margin-bottom: 24px;
-}
-
+.control-group { margin-bottom: 32px; }
 .control-group label {
-  display: block;
-  font-size: 12px;
-  color: var(--text-muted);
-  margin-bottom: 12px;
-  letter-spacing: 0.5px;
+  display: block; font-size: 12px; color: var(--text-muted);
+  margin-bottom: 12px; letter-spacing: 1px;
 }
 
-/* 按钮组模拟单选 */
-.radio-group {
-  display: flex;
-  gap: 8px;
-}
-
+/* 按钮组重新设计 */
+.radio-group { display: flex; gap: 12px; }
 .radio-group button {
-  flex: 1;
-  background: var(--modal-bg);
-  border: 1px solid var(--border-color);
-  padding: 10px;
-  font-size: 12px;
-  color: var(--text-main);
-  cursor: pointer;
-  transition: all 0.2s;
+  flex: 1; background: rgba(0,0,0,0.2); border: 1px solid var(--modal-border);
+  padding: 12px; font-size: 12px; color: var(--text-muted);
+  cursor: pointer; border-radius: 6px; transition: all 0.2s ease;
 }
-
+.radio-group button:hover { border-color: rgba(255,255,255,0.3); color: var(--text-primary); }
 .radio-group button.active {
-  background: var(--text-main);
-  color: #fff;
-  border-color: var(--text-main);
+  background: rgba(255,255,255,0.1); border-color: var(--text-primary);
+  color: var(--text-primary); font-weight: 500;
 }
 
-.checkbox-group label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--text-main);
-  cursor: pointer;
-}
+.checkbox-group label { display: flex; align-items: center; gap: 10px; color: var(--text-muted); cursor: pointer; }
+.checkbox-group input[type="checkbox"] { accent-color: var(--text-primary); width: 14px; height: 14px; opacity: 0.8; }
 
-.checkbox-group input[type="checkbox"] {
-  accent-color: var(--text-main);
-  width: 14px;
-  height: 14px;
-}
-
-.sidebar-footer {
-  padding: 24px;
-  border-top: 1px solid var(--border-color);
-}
+.sidebar-footer { padding: 24px 32px; border-top: 1px solid var(--modal-border); background: rgba(0,0,0,0.2); }
 
 .btn-primary {
-  background: var(--text-main);
-  color: #fff;
-  border: none;
-  padding: 14px;
-  font-size: 14px;
-  cursor: pointer;
-  letter-spacing: 1px;
+  background: var(--accent-color); color: #fff;
+  border: none; padding: 14px; font-size: 13px; font-weight: 500;
+  cursor: pointer; letter-spacing: 1px; border-radius: 6px;
+  transition: all 0.2s;
 }
-
-.btn-primary:hover { background: #333; }
+.btn-primary:hover { background: #ff8566; box-shadow: 0 4px 16px rgba(255, 107, 74, 0.3); }
 .btn-block { width: 100%; display: block; }
-
 .btn-secondary {
-  background: transparent;
-  border: 1px solid var(--border-color);
-  color: var(--text-main);
-  cursor: pointer;
-  width: 100%;
+  background: transparent; border: 1px solid var(--modal-border);
+  color: var(--text-primary); cursor: pointer; border-radius: 6px; width: 100%;
 }
-.btn-sm { padding: 8px; font-size: 12px; }
+.btn-secondary:hover { background: rgba(255,255,255,0.05); }
+.btn-sm { padding: 10px; font-size: 12px; }
