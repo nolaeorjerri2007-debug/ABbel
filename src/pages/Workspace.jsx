@@ -2,19 +2,6 @@ import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '@clerk/clerk-react'
 import { useNavigate } from 'react-router-dom'
 
-// 原生防抖辅助函数
-function debounce(func, wait) {
-  let timeout;
-  return function executedFunction(...args) {
-    const later = () => {
-      clearTimeout(timeout);
-      func(...args);
-    };
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-  };
-}
-
 const SLIDER_CONFIG = [
   {
     group: '人际',
@@ -51,6 +38,7 @@ function Workspace() {
 
   const [draft, setDraft] = useState('')
   const [scores, setScores] = useState({})
+  const [isDragging, setIsDragging] = useState(false)
   const [loading, setLoading] = useState(false)
   const [sysError, setSysError] = useState(null)
   const [diagnosis, setDiagnosis] = useState('')
@@ -92,11 +80,7 @@ function Workspace() {
   }, []);
 
   const handleApplySlot = (template) => {
-    setScores(prev => {
-       const updated = { ...prev, ...template.scores };
-       if (autoApply) autoDebounceRef.current(updated, baseScoresRef.current);
-       return updated;
-    });
+    setScores(prev => ({ ...prev, ...template.scores }));
     setShowSlotMenu(false);
     showToast(`已应用记忆槽：${template.name}`, 'success');
   };
@@ -261,23 +245,6 @@ function Workspace() {
       .replace(/<del>[\s\S]*?<\/del>/gi, '') // 彻底丢弃 <del> 及其内部内容
       .replace(/<\/?ins>/gi, '');            // 仅剥离 <ins> 标签外壳，保留内部新增文本
   };
-
-  // 轻量防抖钩子：只负责计算偏移并调用引擎
-  const autoDebounceRef = useRef(
-    debounce((currentScores, base) => {
-      const changedParams = {};
-      let count = 0;
-      for (const key in currentScores) {
-        if (currentScores[key] !== base[key]) {
-          changedParams[key] = currentScores[key];
-          count++;
-        }
-      }
-      if (count > 0) {
-        triggerDiffEngine(changedParams, count);
-      }
-    }, 1500)
-  );
 
   const TERMINAL_TEXTS = [
     '> 正在解析你的意图...',
@@ -525,18 +492,8 @@ function Workspace() {
 
   const handleSliderChange = (key, newValue) => {
     const val = Number(newValue);
-
-    setScores(prev => {
-      // 确保拿到 100% 最新的状态集合
-      const updatedScores = { ...prev, [key]: val };
-
-      // 在拿到最新状态的瞬间，触发防抖引擎
-      if (autoApply) {
-        autoDebounceRef.current(updatedScores, baseScoresRef.current);
-      }
-
-      return updatedScores;
-    });
+    // 纯粹的 UI 状态更新，绝对不要在这里发请求
+    setScores(prev => ({ ...prev, [key]: val }));
   };
 
   const getStagedInfo = () => {
@@ -548,6 +505,24 @@ function Workspace() {
     }
     return { changed, count };
   };
+
+  // 全局神经中枢：AUTO 引擎的防抖与发射统一收口在此
+  useEffect(() => {
+    // 规则 1：没开 AUTO 引擎，或者手还捏在滑块上(isDragging)，绝对安静，不准发请求
+    if (!autoApply || isDragging) return;
+
+    const { changed, count } = getStagedInfo();
+    if (count === 0) return; // 没参数变化，保持安静
+
+    // 规则 2：用户松手了！给他 2000 毫秒的"犹豫期"
+    const timer = setTimeout(() => {
+      triggerDiffEngine(changed, count);
+    }, 2000);
+
+    // 规则 3：如果 2000 毫秒内他再次摸了滑块（isDragging 变 true），立刻掐死刚才的倒数！
+    return () => clearTimeout(timer);
+  }, [scores, autoApply, isDragging]);
+
   const { changed: stagedParams, count: stagedCount } = getStagedInfo();
 
   const handleCancel = () => setScores({ ...baseScoresRef.current });
@@ -563,14 +538,7 @@ function Workspace() {
     if (text && text.startsWith('ABBEL_PRESET:')) {
       try {
         const parsedScores = JSON.parse(text.replace('ABBEL_PRESET:', ''));
-        setScores(prev => {
-          const updatedScores = { ...prev, ...parsedScores };
-          // 触发防抖重构引擎（如果 AUTO 开启）
-          if (autoApply) {
-            autoDebounceRef.current(updatedScores, baseScoresRef.current);
-          }
-          return updatedScores;
-        });
+        setScores(prev => ({ ...prev, ...parsedScores }));
         showToast('指纹解析成功，调音台参数已就位！', 'success');
       } catch (e) {
         showToast('指纹格式已损坏，解析失败', 'error');
@@ -687,6 +655,10 @@ function Workspace() {
             step="0.01"
             value={value}
             onChange={(e) => handleSliderChange(slider.key, e.target.value)}
+            onMouseDown={() => setIsDragging(true)}
+            onTouchStart={() => setIsDragging(true)}
+            onMouseUp={() => setIsDragging(false)}
+            onTouchEnd={() => setIsDragging(false)}
             style={{
               position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
               opacity: 0, cursor: 'pointer', margin: 0, zIndex: 5
