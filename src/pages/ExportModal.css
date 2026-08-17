@@ -1,242 +1,118 @@
 /* ==================== 赛博机械与高透宣纸美学 ==================== */
 :root {
-  /* 降低一点不透明度，保证背景依然可见，消除白屏死机感 */
   --modal-overlay: rgba(242, 239, 234, 0.45); 
   --accent-color: #E2583E; 
   --accent-neon: #ff5722; 
   --font-stack: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  /* 高级衬线字体：用于人参茶和红酒风格 */
+  --font-serif: "Songti SC", "STSong", "Noto Serif SC", serif; 
 }
 
-/* 遮罩底盘 */
-.abbel-modal-overlay {
-  position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-  background: var(--modal-overlay);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  display: flex; align-items: center; justify-content: center;
-  z-index: 9999;
-  animation: modalFadeIn 0.3s ease-out;
-  overflow: hidden;
-}
-
-@keyframes modalFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.btn-close-global {
-  position: absolute; top: 32px; right: 40px;
-  background: none; border: none; font-family: var(--font-mono);
-  font-size: 13px; color: #666; cursor: pointer; transition: 0.3s;
-  letter-spacing: 2px; z-index: 100;
-}
+/* （...保留前面对 overlay, 扫描仪, loader, poker-hand 的通用动画 CSS，和上一版完全一致...） */
+.abbel-modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--modal-overlay); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); display: flex; align-items: center; justify-content: center; z-index: 9999; animation: modalFadeIn 0.3s ease-out; overflow: hidden; }
+@keyframes modalFadeIn { from { opacity: 0; } to { opacity: 1; } }
+.btn-close-global { position: absolute; top: 32px; right: 40px; background: none; border: none; font-family: var(--font-mono); font-size: 13px; color: #666; cursor: pointer; transition: 0.3s; letter-spacing: 2px; z-index: 100; }
 .btn-close-global:hover { color: var(--accent-color); }
-
-/* ================= 第一幕：胶囊悬浮通知 ================= */
-.cyber-glitch-container {
-  display: flex; align-items: center; justify-content: center;
-  animation: popIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-@keyframes popIn {
-  from { opacity: 0; transform: translateY(20px) scale(0.95); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-.status-pill {
-  display: flex; align-items: center; gap: 14px;
-  background: rgba(255, 255, 255, 0.85);
-  padding: 16px 32px; border-radius: 100px;
-  box-shadow: 0 16px 40px rgba(0,0,0,0.08), inset 0 0 0 1px rgba(255,255,255,1);
-}
-.status-dot {
-  width: 10px; height: 10px; border-radius: 50%;
-  background: var(--accent-color);
-  box-shadow: 0 0 10px var(--accent-neon);
-  animation: pulse 1.5s infinite;
-}
-@keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(0.8); }
-}
-.glitch-text {
-  font-family: var(--font-mono); font-size: 15px; font-weight: 500;
-  color: #333; letter-spacing: 1px;
-}
-
-/* ================= 第二幕：复古扫描卡槽 ================= */
-.scanner-container {
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-}
-.scanner-slot {
-  width: 440px; height: 280px;
-  border: 1px dashed rgba(226, 88, 62, 0.4);
-  background: rgba(255, 255, 255, 0.6);
-  border-radius: 16px; position: relative;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  cursor: pointer; overflow: hidden;
-  box-shadow: inset 0 0 40px rgba(0,0,0,0.02), 0 20px 60px rgba(0,0,0,0.06);
-  transition: all 0.3s ease;
-}
-.scanner-slot:hover {
-  background: rgba(255, 255, 255, 0.9);
-  border-color: var(--accent-color);
-  box-shadow: 0 20px 60px rgba(226, 88, 62, 0.15);
-}
-.scanner-laser {
-  position: absolute; top: 0; left: 0; width: 100%; height: 2px;
-  background: var(--accent-color);
-  box-shadow: 0 0 15px var(--accent-neon);
-  animation: scan 2.5s infinite ease-in-out;
-}
-@keyframes scan {
-  0%, 100% { top: 10%; opacity: 0; }
-  10%, 90% { opacity: 1; }
-  50% { top: 90%; }
-}
-.scanner-brackets {
-  font-family: var(--font-mono); font-size: 18px; color: var(--accent-color);
-  margin-bottom: 12px; letter-spacing: 2px; font-weight: 600;
-}
+.scanner-container { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; }
+.scanner-slot { width: 440px; height: 280px; border: 1px dashed rgba(226, 88, 62, 0.4); background: rgba(255, 255, 255, 0.6); border-radius: 16px; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; overflow: hidden; box-shadow: inset 0 0 40px rgba(0,0,0,0.02), 0 20px 60px rgba(0,0,0,0.06); transition: all 0.3s ease; }
+.scanner-slot:hover { background: rgba(255, 255, 255, 0.9); border-color: var(--accent-color); box-shadow: 0 20px 60px rgba(226, 88, 62, 0.15); }
+.scanner-laser { position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: var(--accent-color); box-shadow: 0 0 15px var(--accent-neon); animation: scan 2.5s infinite ease-in-out; }
+@keyframes scan { 0%, 100% { top: 10%; opacity: 0; } 10%, 90% { opacity: 1; } 50% { top: 90%; } }
+.scanner-brackets { font-family: var(--font-mono); font-size: 18px; color: var(--accent-color); margin-bottom: 12px; letter-spacing: 2px; font-weight: 600; }
 .scanner-hint { font-size: 13px; color: #666; letter-spacing: 1px; }
 
-/* ================= 第三幕：完美居中的扇形牌局 ================= */
-.poker-desk {
-  width: 100%; height: 100%; position: relative;
-  /* 使用纯正的居中对齐，告别沉底 */
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-}
-
-.poker-hint-text {
-  position: absolute; top: 12%; text-align: center;
-  font-family: var(--font-mono); color: #333; animation: fadeInDown 0.6s ease-out;
-}
-.poker-hint-text span { font-size: 18px; font-weight: 600; letter-spacing: 4px; }
-.poker-hint-text p { font-size: 12px; color: #888; margin-top: 8px; letter-spacing: 1px; }
-
-.poker-hand {
-  position: relative; 
-  width: 100%; height: 500px;
-  display: flex; justify-content: center; align-items: center;
-  margin-top: 60px; /* 给顶部提示文字留空间 */
-}
-
-/* 扑克牌基类 */
-.poker-card {
-  position: absolute;
-  transform-origin: bottom center;
-  /* 增加贝塞尔曲线的弹性，让动画更顺滑 */
-  transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
-  cursor: pointer;
-  animation: dealCard 0.8s cubic-bezier(0.16, 1, 0.3, 1) backwards;
-}
-
-@keyframes dealCard {
-  from { opacity: 0; transform: translateY(300px) scale(0.5); }
-}
-
-/* 扇形排布数学计算 (相对中心点散开) */
-.poker-card.card-0 { transform: rotate(-12deg) translateX(-180px) translateY(30px); z-index: 1; }
-.poker-card.card-1 { transform: rotate(0deg) translateX(0) translateY(0); z-index: 2; }
-.poker-card.card-2 { transform: rotate(12deg) translateX(180px) translateY(30px); z-index: 1; }
-
-/* 🌟 核心修复：看牌交互 (完美遵循物理规律，不瞬移！) */
-/* 左侧牌往左上抽 */
-.poker-card.card-0:hover {
-  transform: rotate(-4deg) translateX(-260px) translateY(-40px) scale(1.08) !important;
-  z-index: 10 !important; box-shadow: 0 30px 60px rgba(0,0,0,0.2);
-}
-/* 中间牌往正上抽 */
-.poker-card.card-1:hover {
-  transform: rotate(0deg) translateX(0) translateY(-60px) scale(1.08) !important;
-  z-index: 10 !important; box-shadow: 0 30px 60px rgba(0,0,0,0.2);
-}
-/* 右侧牌往右上抽 */
-.poker-card.card-2:hover {
-  transform: rotate(4deg) translateX(260px) translateY(-40px) scale(1.08) !important;
-  z-index: 10 !important; box-shadow: 0 30px 60px rgba(0,0,0,0.2);
-}
-
-/* 第四幕：打牌飞出动画 */
-.poker-card.fly-out {
-  /* 往屏幕正上方冲出 */
-  transform: translateY(-800px) scale(1.1) rotate(0deg) !important;
-  opacity: 0; z-index: 20 !important;
-  transition: all 0.6s cubic-bezier(0.55, 0.085, 0.68, 0.53);
-}
-.poker-card.fade-out {
-  /* 没被选中的牌直接沉底消失 */
-  opacity: 0 !important; pointer-events: none;
-  transform: translateY(200px) scale(0.9) !important;
-}
-
-/* ================= 海报渲染排版 ================= */
-.poster-canvas {
-  display: flex; flex-direction: column; overflow: hidden;
-  box-shadow: 0 16px 40px rgba(0,0,0,0.1);
-  box-sizing: border-box; font-family: var(--font-stack);
-  pointer-events: none; 
-}
-.poster-image-area { width: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-.poster-image-area img { width: 100%; height: 100%; object-fit: cover; }
-.poster-copy { font-size: 13px; line-height: 1.7; margin: 0; flex-grow: 1; text-align: justify; }
-.poster-watermark { font-size: 9px; color: #999; letter-spacing: 0.5px; border-top: 1px solid rgba(0,0,0,0.05); padding-top: 8px; margin-top: 16px;}
-
-.tpl-social { width: 300px; height: 400px; background: #f5f5f7; padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.8); }
-.tpl-social .poster-image-area { height: 60%; border-radius: 8px; }
-.tpl-social .poster-text-area {
-  margin-top: -24px; margin-left: 12px; margin-right: 12px;
-  background: rgba(255,255,255,0.95); padding: 20px; border-radius: 8px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.1); position: relative; z-index: 2; display: flex; flex-direction: column; min-height: 140px;
-}
-.tpl-social .deco-line { width: 24px; height: 2px; background: #222; margin-bottom: 12px; opacity: 0.8; }
-.tpl-social .poster-copy { color: #222; }
-
-.tpl-minimal { width: 320px; height: 440px; background: #ffffff; padding: 24px; border-radius: 4px; border: 1px solid #eee; }
-.tpl-minimal .poster-image-area.square { aspect-ratio: 1/1; height: auto; margin-bottom: 24px; }
-.tpl-minimal .poster-text-area { display: flex; flex-direction: column; flex-grow: 1; }
-.tpl-minimal .poster-copy { color: #111; font-weight: 500; font-size: 14px; text-align: center; }
-.tpl-minimal .poster-watermark { text-align: center; border-top: none; }
-
-.tpl-cyber { width: 300px; height: 400px; background: #111111; border-radius: 8px; border: 1px solid #333; }
-.tpl-cyber .poster-image-area { height: 50%; opacity: 0.85; filter: grayscale(20%) contrast(120%); }
-.tpl-cyber .poster-text-area { padding: 24px; display: flex; flex-direction: column; flex-grow: 1; }
-.tpl-cyber .poster-copy { color: #66FF88; font-family: var(--font-mono); }
-.tpl-cyber .poster-watermark { color: #555; border-top-color: #333; font-family: var(--font-mono); }
-/* ================= 视觉运算加载界面 ================= */
-.ai-processing-container {
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  width: 100%; height: 100%; animation: fadeIn 0.3s ease;
-}
-
-.cube-loader {
-  width: 40px; height: 40px; position: relative; margin-bottom: 24px;
-  transform: rotateZ(45deg);
-}
-.cube-loader .cube {
-  float: left; width: 50%; height: 50%; position: relative;
-  transform: scale(1.1); 
-}
-.cube-loader .cube:before {
-  content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-  background-color: var(--accent-color);
-  animation: cube-fold 2.4s infinite linear both;
-  transform-origin: 100% 100%;
-}
+.ai-processing-container { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; animation: fadeIn 0.3s ease; }
+.cube-loader { width: 40px; height: 40px; position: relative; margin-bottom: 24px; transform: rotateZ(45deg); }
+.cube-loader .cube { float: left; width: 50%; height: 50%; position: relative; transform: scale(1.1); }
+.cube-loader .cube:before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--accent-color); animation: cube-fold 2.4s infinite linear both; transform-origin: 100% 100%; }
 .cube-loader .cube:nth-child(2) { transform: scale(1.1) rotateZ(90deg); }
 .cube-loader .cube:nth-child(4) { transform: scale(1.1) rotateZ(180deg); }
 .cube-loader .cube:nth-child(3) { transform: scale(1.1) rotateZ(270deg); }
 .cube-loader .cube:nth-child(2):before { animation-delay: 0.3s; }
 .cube-loader .cube:nth-child(4):before { animation-delay: 0.6s; }
 .cube-loader .cube:nth-child(3):before { animation-delay: 0.9s; }
+@keyframes cube-fold { 0%, 10% { transform: perspective(140px) rotateX(-180deg); opacity: 0; } 25%, 75% { transform: perspective(140px) rotateX(0deg); opacity: 1; } 90%, 100% { transform: perspective(140px) rotateY(180deg); opacity: 0; } }
+.ai-progress-text { font-family: var(--font-mono); font-size: 12px; color: var(--accent-color); letter-spacing: 2px; text-transform: uppercase; }
 
-@keyframes cube-fold {
-  0%, 10% { transform: perspective(140px) rotateX(-180deg); opacity: 0; }
-  25%, 75% { transform: perspective(140px) rotateX(0deg); opacity: 1; }
-  90%, 100% { transform: perspective(140px) rotateY(180deg); opacity: 0; }
+.poker-desk { width: 100%; height: 100%; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.poker-hint-text { position: absolute; top: 12%; text-align: center; font-family: var(--font-mono); color: #333; animation: fadeInDown 0.6s ease-out; }
+.poker-hint-text span { font-size: 18px; font-weight: 600; letter-spacing: 4px; }
+.poker-hint-text p { font-size: 12px; color: #888; margin-top: 8px; letter-spacing: 1px; }
+.poker-hand { position: relative; width: 100%; height: 500px; display: flex; justify-content: center; align-items: center; margin-top: 60px; }
+
+.poker-card { position: absolute; transform-origin: bottom center; transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1); cursor: pointer; animation: dealCard 0.8s cubic-bezier(0.16, 1, 0.3, 1) backwards; }
+@keyframes dealCard { from { opacity: 0; transform: translateY(300px) scale(0.5); } }
+.poker-card.card-0 { transform: rotate(-12deg) translateX(-180px) translateY(30px); z-index: 1; }
+.poker-card.card-1 { transform: rotate(0deg) translateX(0) translateY(0); z-index: 2; }
+.poker-card.card-2 { transform: rotate(12deg) translateX(180px) translateY(30px); z-index: 1; }
+.poker-card.card-0:hover { transform: rotate(-4deg) translateX(-280px) translateY(-20px) scale(1.08) !important; z-index: 10 !important; box-shadow: 0 40px 80px rgba(0,0,0,0.25); }
+.poker-card.card-1:hover { transform: rotate(0deg) translateX(0) translateY(-60px) scale(1.08) !important; z-index: 10 !important; box-shadow: 0 40px 80px rgba(0,0,0,0.25); }
+.poker-card.card-2:hover { transform: rotate(4deg) translateX(280px) translateY(-20px) scale(1.08) !important; z-index: 10 !important; box-shadow: 0 40px 80px rgba(0,0,0,0.25); }
+.poker-card.fly-out { transform: translateY(-800px) scale(1.1) rotate(0deg) !important; opacity: 0; z-index: 20 !important; transition: all 0.6s cubic-bezier(0.55, 0.085, 0.68, 0.53); }
+.poker-card.fade-out { opacity: 0 !important; pointer-events: none; transform: translateY(200px) scale(0.9) !important; }
+
+/* ================= 核心：三套全画幅商业海报设计 ================= */
+.poster-canvas {
+  width: 320px; height: 460px; /* 统一标准的商业海报比例 */
+  background-color: var(--poster-bg);
+  position: relative; overflow: hidden;
+  box-shadow: 0 16px 40px rgba(0,0,0,0.12);
+  border-radius: 4px; /* 极小的圆角或无圆角，更显专业 */
+  pointer-events: none; 
 }
 
-.ai-progress-text {
-  font-family: var(--font-mono); font-size: 12px; color: var(--accent-color);
-  letter-spacing: 2px; text-transform: uppercase;
+/* 产品图片通用物理阴影魔法（模拟真实棚拍） */
+.poster-image-wrap {
+  position: absolute; display: flex; align-items: center; justify-content: center; z-index: 2;
+}
+.poster-image-wrap img {
+  max-width: 100%; max-height: 100%; object-fit: contain;
+  /* 这个滤镜极其重要！它能识别透明 PNG 的边缘并打上阴影，让商品落地 */
+  filter: drop-shadow(0 24px 32px rgba(0,0,0,0.15)); 
+}
+
+/* --- 模板 1：东方雅致/草本风 (参考人参茶) --- */
+.tpl-oriental .oriental-text-wrap {
+  position: absolute; top: 48px; left: 32px; z-index: 3; color: var(--poster-text);
+}
+.tpl-oriental .oriental-title {
+  font-family: var(--font-serif); font-size: 38px; line-height: 1.1; font-weight: 700; margin: 0; letter-spacing: 2px;
+}
+.tpl-oriental .oriental-subtitle {
+  font-family: var(--font-serif); font-size: 14px; font-weight: 400; margin-top: 16px; opacity: 0.85; letter-spacing: 1px;
+}
+.tpl-oriental .oriental-image-wrap {
+  bottom: 30px; left: 0; width: 100%; height: 60%; align-items: flex-end;
+}
+
+/* --- 模板 2：现代极简/红酒风 (参考珑纳红酒) --- */
+.tpl-wine { display: flex; flex-direction: column; align-items: center; }
+.tpl-wine .wine-text-wrap {
+  position: absolute; top: 40px; width: 100%; text-align: center; z-index: 3; color: var(--poster-text);
+}
+.tpl-wine .wine-title {
+  font-family: var(--font-serif); font-size: 28px; font-weight: 700; margin: 0; letter-spacing: 6px;
+}
+.tpl-wine .wine-subtitle {
+  font-family: var(--font-stack); font-size: 11px; font-weight: 400; margin-top: 8px; opacity: 0.7; letter-spacing: 2px;
+}
+.tpl-wine .wine-image-wrap {
+  top: 120px; width: 100%; height: 65%;
+}
+
+/* --- 模板 3：先锋杂志/床品风 (参考 VISIONA 床单) --- */
+.tpl-magazine .magazine-top-bar {
+  position: absolute; top: 24px; left: 24px; right: 24px;
+  display: flex; justify-content: space-between;
+  font-family: var(--font-stack); font-weight: 600; font-size: 10px; color: var(--poster-text); opacity: 0.7; z-index: 3; letter-spacing: 1px;
+}
+.tpl-magazine .magazine-bg-text {
+  position: absolute; top: 45%; left: 0; width: 100%; transform: translateY(-50%);
+  text-align: center; font-family: var(--font-stack); font-size: 56px; font-weight: 900;
+  color: #ffffff; /* 纯白压底 */
+  opacity: 0.8; z-index: 1; letter-spacing: 4px;
+}
+.tpl-magazine .magazine-image-wrap {
+  bottom: 0; width: 100%; height: 70%; align-items: flex-end; z-index: 2;
 }
