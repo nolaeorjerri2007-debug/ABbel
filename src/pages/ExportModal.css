@@ -88,19 +88,21 @@
 .poster-image-wrap {
   position: absolute; display: block; z-index: 2; pointer-events: none; /* 让图片防穿透，避免误触 */
 }
-.poster-image-wrap img { width: 100%; height: 100%; display: block; object-fit: contain; filter: drop-shadow(0 20px 30px rgba(0,0,0,0.2)); }
+.poster-image-wrap img { position: absolute; display: block; filter: drop-shadow(0 20px 30px rgba(0,0,0,0.2)); }
 
 /* 模板 1 */
 .tpl-oriental .oriental-text-wrap { position: absolute; top: 44px; left: 32px; z-index: 3; color: var(--poster-text); max-width: 240px; }
 .tpl-oriental .oriental-title { font-family: var(--font-serif); font-size: 38px; line-height: 1.25; font-weight: 700; margin: 0; letter-spacing: 2px; }
 .tpl-oriental .oriental-subtitle { font-family: var(--font-serif); font-size: 14px; font-weight: 500; margin-top: 18px; opacity: 0.85; letter-spacing: 1px; }
 .tpl-oriental .oriental-image-wrap { bottom: 20px; left: 0; width: 100%; height: 60%; }
+.tpl-oriental .oriental-watermark { position: absolute; right: 28px; bottom: 8px; font-family: var(--font-serif); font-size: 10px; font-weight: 500; letter-spacing: 2px; color: var(--poster-text); opacity: 0.55; z-index: 3; }
 
 /* 模板 2 */
 .tpl-wine .wine-text-wrap { position: absolute; top: 40px; width: 100%; text-align: center; z-index: 3; color: var(--poster-text); padding: 0 24px; box-sizing: border-box; }
 .tpl-wine .wine-title { font-family: var(--font-serif); font-size: 32px; font-weight: 700; margin: 0; letter-spacing: 8px; }
 .tpl-wine .wine-subtitle { font-family: var(--font-sans); font-size: 10px; font-weight: 500; margin-top: 8px; opacity: 0.6; letter-spacing: 3px; text-transform: uppercase; }
 .tpl-wine .wine-image-wrap { top: 130px; width: 100%; height: 65%; }
+.tpl-wine .wine-watermark { position: absolute; bottom: 8px; left: 0; right: 0; text-align: center; font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif; font-weight: bold; font-size: 10px; letter-spacing: 2px; color: var(--poster-text); opacity: 0.55; z-index: 3; }
 
 /* 模板 3 */
 .tpl-magazine .magazine-top-bar { position: absolute; top: 24px; left: 24px; right: 24px; display: flex; justify-content: space-between; font-family: var(--font-sans); font-weight: bold; font-size: 10px; color: var(--poster-text); opacity: 0.5; z-index: 3; letter-spacing: 1px; text-transform: uppercase; }

@@ -68,6 +68,7 @@ export default function ExportModal({ isOpen, onClose, rawText, title, subtitle 
   const [aiProgress, setAiProgress] = useState('初始化视觉神经网络...');
   const [palette, setPalette] = useState({ bg: '#f2f0eb', text: '#3d3935' });
   const [closing, setClosing] = useState(false);
+  const [imageMeta, setImageMeta] = useState(null); // 主体图自然尺寸，用于导出时精确等比缩放
   
   // 初始化提取的文案，直接填充进 DOM
   const [textData, setTextData] = useState({ title: '产品名称', sub: '产品核心描述文案' });
@@ -85,6 +86,15 @@ export default function ExportModal({ isOpen, onClose, rawText, title, subtitle 
     if (closing) return;
     setClosing(true);
     setTimeout(() => onClose(), 300);
+  };
+
+  // 按容器尺寸等比缩放主体图，显式计算 left/top 居中，避免 html2canvas 忽略 object-fit/flex 导致变形
+  const fitImage = (cw, ch) => {
+    if (!imageMeta || !imageMeta.w || !imageMeta.h) return null;
+    const scale = Math.min(cw / imageMeta.w, ch / imageMeta.h);
+    const width = Math.round(imageMeta.w * scale);
+    const height = Math.round(imageMeta.h * scale);
+    return { width, height, left: Math.round((cw - width) / 2), top: Math.round((ch - height) / 2) };
   };
 
   useEffect(() => {
@@ -161,6 +171,7 @@ export default function ExportModal({ isOpen, onClose, rawText, title, subtitle 
     const img = new Image();
     img.src = processedUrl;
     img.onload = () => {
+      setImageMeta({ w: img.naturalWidth, h: img.naturalHeight });
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       canvas.width = 100; canvas.height = (img.height / img.width) * 100;
@@ -218,6 +229,10 @@ export default function ExportModal({ isOpen, onClose, rawText, title, subtitle 
 
   if (!isOpen) return null;
 
+  const orientalFit = fitImage(320, 276);
+  const wineFit = fitImage(320, 299);
+  const magazineFit = fitImage(320, 299);
+
   return (
     <div className={`abbel-modal-overlay ${closing ? 'closing' : ''}`}>
       <button className="btn-close-global" onClick={handleClose}>[ ESC ] 退出 · ABORT</button>
@@ -264,7 +279,8 @@ export default function ExportModal({ isOpen, onClose, rawText, title, subtitle 
                       ○ {textData.sub}
                     </h2>
                   </div>
-                  <div className="poster-image-wrap oriental-image-wrap"><img src={uploadedImage} alt="media" /></div>
+                  <div className="poster-image-wrap oriental-image-wrap"><img src={uploadedImage} alt="media" style={orientalFit} /></div>
+                  <div className="oriental-watermark">ABBEL DESIGN</div>
                 </div>
               </div>
 
@@ -279,7 +295,8 @@ export default function ExportModal({ isOpen, onClose, rawText, title, subtitle 
                       {textData.sub.toUpperCase()}
                     </h2>
                   </div>
-                  <div className="poster-image-wrap wine-image-wrap"><img src={uploadedImage} alt="media" /></div>
+                  <div className="poster-image-wrap wine-image-wrap"><img src={uploadedImage} alt="media" style={wineFit} /></div>
+                  <div className="wine-watermark">ABBEL DESIGN</div>
                 </div>
               </div>
 
@@ -293,7 +310,7 @@ export default function ExportModal({ isOpen, onClose, rawText, title, subtitle 
                   <div className="magazine-bg-text">
                     {textData.title.substring(0,6).toUpperCase()}
                   </div>
-                  <div className="poster-image-wrap magazine-image-wrap"><img src={uploadedImage} alt="media" /></div>
+                  <div className="poster-image-wrap magazine-image-wrap"><img src={uploadedImage} alt="media" style={magazineFit} /></div>
                 </div>
               </div>
             </div>
