@@ -862,6 +862,8 @@ function Workspace() {
                     wordBreak: 'break-word',
                     position: 'relative',
                     cursor: 'pointer',
+                    padding: '16px',
+                    margin: '-16px',
                     borderRadius: '8px',
                     boxShadow: isDraftHovered ? 'inset 0 0 0 1px rgba(209, 62, 20, 0.4)' : 'inset 0 0 0 1px transparent',
                     backgroundColor: isDraftHovered ? 'rgba(209, 62, 20, 0.05)' : 'transparent',
