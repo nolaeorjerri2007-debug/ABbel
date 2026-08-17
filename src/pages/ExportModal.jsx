@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import html2canvas from 'html2canvas';
-import imglyRemoveBackground from '@imgly/background-removal';
+import { removeBackground } from '@imgly/background-removal';
 import './ExportModal.css';
 
 export default function ExportModal({ isOpen, onClose, rawText, parameters }) {
@@ -47,7 +47,7 @@ export default function ExportModal({ isOpen, onClose, rawText, parameters }) {
       setAiProgress('正在分离主体结构 (首次加载模型需耗时 5-10 秒)...');
       
       // 1. WASM AI 抠图
-      const imageBlob = await imglyRemoveBackground(file);
+      const imageBlob = await removeBackground(file);
       const transparentUrl = URL.createObjectURL(imageBlob);
       setUploadedImage(transparentUrl);
 
