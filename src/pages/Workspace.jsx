@@ -378,7 +378,8 @@ function Workspace() {
       if (!response.ok) throw new Error(`HTTP ${response.status}`)
 
       const data = await response.json()
-      const answerStr = data?.data?.outputs?.text || ''
+      const outputs = data?.data?.outputs || {}
+      const answerStr = outputs.text || ''
 
       if (!answerStr || !answerStr.trim()) {
         throw new Error('返回数据为空')
@@ -418,9 +419,16 @@ function Workspace() {
       } else {
         setDraft(finalDraft);
         currentDraftRef.current = finalDraft;
-        if (typeof parsed.title === 'string' && parsed.title.trim()) {
-          titleRef.current = parsed.title.trim();
+
+        // title 多级兜底：JSON 内字段 > Dify 独立输出变量 > 正则直抓
+        let finalTitle = typeof parsed.title === 'string' ? parsed.title.trim() : '';
+        if (!finalTitle && typeof outputs.title === 'string') finalTitle = outputs.title.trim();
+        if (!finalTitle) {
+          const m = cleanedText.match(/["']title["']\s*:\s*["']([^"']+)["']/);
+          if (m) finalTitle = m[1].trim();
         }
+        if (finalTitle) titleRef.current = finalTitle;
+
         setDiagnosis(diagText);
         setScores(mappedScores);
         baseScoresRef.current = mappedScores;

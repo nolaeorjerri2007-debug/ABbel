@@ -276,7 +276,7 @@ export default function ExportModal({ isOpen, onClose, rawText, title }) {
                     <span contentEditable suppressContentEditableWarning onClick={e => e.stopPropagation()}>{textData.sub}</span>
                     <span>ABBEL DESIGN</span>
                   </div>
-                  <div className="magazine-bg-text" contentEditable suppressContentEditableWarning onClick={e => e.stopPropagation()}>
+                  <div className="magazine-bg-text">
                     {textData.title.substring(0,6).toUpperCase()}
                   </div>
                   <div className="poster-image-wrap magazine-image-wrap"><img src={uploadedImage} alt="media" /></div>

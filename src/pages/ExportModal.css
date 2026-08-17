@@ -57,7 +57,7 @@
 .poker-card.card-2 { transform: rotate(12deg) translateX(180px) translateY(30px); z-index: 1; }
 .poker-card.card-0:hover { transform: rotate(-4deg) translateX(-280px) translateY(-20px) scale(1.08) !important; z-index: 10 !important; box-shadow: 0 40px 80px rgba(0,0,0,0.25); }
 .poker-card.card-1:hover { transform: rotate(0deg) translateX(0) translateY(-60px) scale(1.08) !important; z-index: 10 !important; box-shadow: 0 40px 80px rgba(0,0,0,0.25); }
-.poker-card.card-2:hover { transform: rotate(4deg) translateX(280px) translateX(280px) translateY(-20px) scale(1.08) !important; z-index: 10 !important; box-shadow: 0 40px 80px rgba(0,0,0,0.25); }
+.poker-card.card-2:hover { transform: rotate(4deg) translateX(280px) translateY(-20px) scale(1.08) !important; z-index: 10 !important; box-shadow: 0 40px 80px rgba(0,0,0,0.25); }
 .poker-card.fly-out { transform: translateY(-800px) scale(1.1) rotate(0deg) !important; opacity: 0; z-index: 20 !important; transition: all 0.6s cubic-bezier(0.55, 0.085, 0.68, 0.53); }
 .poker-card.fade-out { opacity: 0 !important; pointer-events: none; transform: translateY(200px) scale(0.9) !important; }
 
@@ -102,5 +102,5 @@
 
 /* 模板 3 */
 .tpl-magazine .magazine-top-bar { position: absolute; top: 24px; left: 24px; right: 24px; display: flex; justify-content: space-between; font-family: var(--font-sans); font-weight: bold; font-size: 10px; color: var(--poster-text); opacity: 0.5; z-index: 3; letter-spacing: 1px; text-transform: uppercase; }
-.tpl-magazine .magazine-bg-text { position: absolute; top: 42%; left: 0; width: 100%; transform: translateY(-50%); text-align: center; font-family: Impact, "Arial Black", var(--font-sans); font-size: 72px; font-weight: 900; color: #ffffff; opacity: 0.95; z-index: 1; letter-spacing: 4px; }
+.tpl-magazine .magazine-bg-text { position: absolute; top: 42%; left: 0; width: 100%; transform: translateY(-50%); text-align: center; font-family: Impact, "Arial Black", var(--font-sans); font-size: 72px; font-weight: 900; color: #ffffff; opacity: 0.95; z-index: 1; letter-spacing: 4px; pointer-events: none; }
 .tpl-magazine .magazine-image-wrap { bottom: 0; width: 100%; height: 65%; z-index: 2; }
