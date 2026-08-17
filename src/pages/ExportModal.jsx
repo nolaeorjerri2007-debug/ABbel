@@ -3,6 +3,7 @@ import html2canvas from 'html2canvas';
 import './ExportModal.css';
 
 export default function ExportModal({ isOpen, onClose, rawText, parameters }) {
+  // 状态机直接从 UPLOAD 开始：'INIT' | 'UPLOAD' | 'DEAL' 
   const [step, setStep] = useState('INIT');
   const [uploadedImage, setUploadedImage] = useState(null);
   const [exportingIndex, setExportingIndex] = useState(null);
@@ -27,19 +28,13 @@ export default function ExportModal({ isOpen, onClose, rawText, parameters }) {
 
   useEffect(() => {
     if (isOpen) {
-      setStep('COPIED');
-      if (cleanText) navigator.clipboard.writeText(cleanText).catch(() => {});
-      
-      const timer = setTimeout(() => {
-        setStep('UPLOAD');
-      }, 1800);
-      return () => clearTimeout(timer);
+      setStep('UPLOAD'); // 👈 打开直接就是扫描仪
     } else {
       setStep('INIT');
       setUploadedImage(null);
       setExportingIndex(null);
     }
-  }, [isOpen, cleanText]);
+  }, [isOpen]);
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -68,14 +63,13 @@ export default function ExportModal({ isOpen, onClose, rawText, parameters }) {
           backgroundColor: index === 2 ? '#111111' : '#ffffff' 
         });
         const link = document.createElement('a');
-        link.download = `Abbel_Masterpiece_${Date.now()}.png`;
+        link.download = `Abbel_Poster_${Date.now()}.png`;
         link.href = canvas.toDataURL('image/png');
         link.click();
         
         setTimeout(() => onClose(), 600);
       }, 300);
     } catch (error) {
-      console.error('导出失败', error);
       alert('导出失败，请重试');
       setExportingIndex(null);
     }
@@ -87,50 +81,29 @@ export default function ExportModal({ isOpen, onClose, rawText, parameters }) {
     <div className="abbel-modal-overlay">
       <button className="btn-close-global" onClick={onClose}>[ ESC ] ABORT</button>
 
-      {/* 第一幕：悬浮胶囊通知 (彻底解决白屏报错感) */}
-      {step === 'COPIED' && (
-        <div className="cyber-glitch-container">
-          <div className="status-pill">
-            <div className="status-dot"></div>
-            <div className="glitch-text">SYS_MSG: 文本资产已静默提取至剪贴板</div>
-          </div>
-        </div>
-      )}
-
-      {/* 第二幕：复古扫描卡槽 (屏幕正中央) */}
       {step === 'UPLOAD' && (
         <div className="scanner-container">
           <div className="scanner-slot" onClick={() => fileInputRef.current.click()}>
             <div className="scanner-laser"></div>
             <div className="scanner-brackets">[ INSERT MEDIA ]</div>
             <div className="scanner-hint">投入或点击上传产品影像，以渲染高阶海报</div>
-            <input 
-              type="file" 
-              ref={fileInputRef} 
-              onChange={handleImageUpload} 
-              accept="image/*" 
-              style={{ display: 'none' }} 
-            />
+            <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" style={{ display: 'none' }} />
           </div>
         </div>
       )}
 
-      {/* 第三幕 & 第四幕：扇形牌局展开 */}
       {step === 'DEAL' && (
         <div className="poker-desk">
           <div className="poker-hint-text">
             <span>CHOOSE YOUR ASSET</span>
-            <p>向外拖拽检视卡牌 · 点击打出完成渲染</p>
+            <p>向两侧抽出检视卡牌 · 点击打出完成渲染</p>
           </div>
 
           <div className="poker-hand">
-            {/* 卡牌 1 (左侧) */}
-            <div 
-              className={`poker-card card-0 ${exportingIndex === 0 ? 'fly-out' : ''} ${exportingIndex !== null && exportingIndex !== 0 ? 'fade-out' : ''}`}
-              onClick={() => handlePlayCard(0)}
-            >
+            {/* 左侧牌 */}
+            <div className={`poker-card card-0 ${exportingIndex === 0 ? 'fly-out' : ''} ${exportingIndex !== null && exportingIndex !== 0 ? 'fade-out' : ''}`} onClick={() => handlePlayCard(0)}>
               <div className="poster-canvas tpl-social" ref={cardRefs[0]}>
-                <div className="poster-image-area"><img src={uploadedImage} alt="media" crossOrigin="anonymous" /></div>
+                <div className="poster-image-area"><img src={uploadedImage} alt="media" /></div>
                 <div className="poster-text-area">
                   <div className="deco-line"></div>
                   <p className="poster-copy">{cleanText}</p>
@@ -139,13 +112,10 @@ export default function ExportModal({ isOpen, onClose, rawText, parameters }) {
               </div>
             </div>
 
-            {/* 卡牌 2 (中间) */}
-            <div 
-              className={`poker-card card-1 ${exportingIndex === 1 ? 'fly-out' : ''} ${exportingIndex !== null && exportingIndex !== 1 ? 'fade-out' : ''}`}
-              onClick={() => handlePlayCard(1)}
-            >
+            {/* 中间牌 */}
+            <div className={`poker-card card-1 ${exportingIndex === 1 ? 'fly-out' : ''} ${exportingIndex !== null && exportingIndex !== 1 ? 'fade-out' : ''}`} onClick={() => handlePlayCard(1)}>
               <div className="poster-canvas tpl-minimal" ref={cardRefs[1]}>
-                <div className="poster-image-area square"><img src={uploadedImage} alt="media" crossOrigin="anonymous" /></div>
+                <div className="poster-image-area square"><img src={uploadedImage} alt="media" /></div>
                 <div className="poster-text-area">
                   <p className="poster-copy">{cleanText}</p>
                   <div className="poster-watermark">{getWatermarkString()}</div>
@@ -153,13 +123,10 @@ export default function ExportModal({ isOpen, onClose, rawText, parameters }) {
               </div>
             </div>
 
-            {/* 卡牌 3 (右侧) */}
-            <div 
-              className={`poker-card card-2 ${exportingIndex === 2 ? 'fly-out' : ''} ${exportingIndex !== null && exportingIndex !== 2 ? 'fade-out' : ''}`}
-              onClick={() => handlePlayCard(2)}
-            >
+            {/* 右侧牌 */}
+            <div className={`poker-card card-2 ${exportingIndex === 2 ? 'fly-out' : ''} ${exportingIndex !== null && exportingIndex !== 2 ? 'fade-out' : ''}`} onClick={() => handlePlayCard(2)}>
               <div className="poster-canvas tpl-cyber" ref={cardRefs[2]}>
-                <div className="poster-image-area"><img src={uploadedImage} alt="media" crossOrigin="anonymous" /></div>
+                <div className="poster-image-area"><img src={uploadedImage} alt="media" /></div>
                 <div className="poster-text-area">
                   <p className="poster-copy">{'>'} {cleanText}</p>
                   <div className="poster-watermark terminal-font">{getWatermarkString()}</div>

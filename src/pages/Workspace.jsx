@@ -911,7 +911,15 @@ function Workspace() {
                   fontSize: '13px',
                   boxSizing: 'border-box' 
                 }}
-                onClick={() => setIsExportOpen(true)}
+                onClick={() => {
+                  // 1. 静默复制文案到剪贴板
+                  if (currentDraftRef.current) {
+                    navigator.clipboard.writeText(currentDraftRef.current).catch(() => {});
+                    showToast('文案已提取至剪贴板', 'success');
+                  }
+                  // 2. 弹窗直接进入上传海报阶段
+                  setIsExportOpen(true);
+                }}
               >
                 导出图文
               </button>
