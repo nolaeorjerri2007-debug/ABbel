@@ -346,7 +346,7 @@ function Workspace() {
     setDiffDraft(null);
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 45000);
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
 
     try {
       // 👉 从 Clerk 获取当前用户的动态令牌
@@ -434,13 +434,13 @@ function Workspace() {
       console.error('Fetch Error:', err);
       if (isAppend) {
         if (err.name === 'AbortError') {
-          showToast('网络波动推演超时 (45s)，已取消追加');
+          showToast('网络波动推演超时 (60s)，已取消追加');
         } else {
           showToast('引擎暂时开小差了，请稍后再试');
         }
       } else {
         if (err.name === 'AbortError') {
-          setSysError('> SYS_ERR: 引擎推演超时 (45s)，请检查网络或稍后重试');
+          setSysError('> SYS_ERR: 引擎推演超时 (60s)，请检查网络或稍后重试');
         } else {
           setSysError('> SYS_ERR: 引擎连接失败或解析异常');
         }

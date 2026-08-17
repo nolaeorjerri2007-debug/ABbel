@@ -184,7 +184,7 @@ export default function ExportModal({ isOpen, onClose, rawText, parameters }) {
                   <h1 className="oriental-title" dangerouslySetInnerHTML={{ __html: copyData.title.replace(/(.{4})/g, '$1<br/>') }}></h1>
                   <h2 className="oriental-subtitle">○ {copyData.subtitle}</h2>
                 </div>
-                <div className="oriental-image-wrap"><img src={uploadedImage} alt="media" crossOrigin="anonymous" /></div>
+                <div className="poster-image-wrap oriental-image-wrap"><img src={uploadedImage} alt="media" /></div>
               </div>
             </div>
 
@@ -195,7 +195,7 @@ export default function ExportModal({ isOpen, onClose, rawText, parameters }) {
                   <h1 className="wine-title">{copyData.title.toUpperCase()}</h1>
                   <h2 className="wine-subtitle">{copyData.subtitle.toUpperCase()}</h2>
                 </div>
-                <div className="wine-image-wrap"><img src={uploadedImage} alt="media" crossOrigin="anonymous" /></div>
+                <div className="poster-image-wrap wine-image-wrap"><img src={uploadedImage} alt="media" /></div>
               </div>
             </div>
 
@@ -208,7 +208,7 @@ export default function ExportModal({ isOpen, onClose, rawText, parameters }) {
                 </div>
                 {/* 巨大的背景漂浮文字 */}
                 <div className="magazine-bg-text">{copyData.title.toUpperCase()}</div>
-                <div className="magazine-image-wrap"><img src={uploadedImage} alt="media" crossOrigin="anonymous" /></div>
+                <div className="poster-image-wrap magazine-image-wrap"><img src={uploadedImage} alt="media" /></div>
               </div>
             </div>
           </div>
