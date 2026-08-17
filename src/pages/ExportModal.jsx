@@ -61,12 +61,13 @@ function removeSolidBackground(file) {
   });
 }
 
-export default function ExportModal({ isOpen, onClose, rawText, title }) {
+export default function ExportModal({ isOpen, onClose, rawText, title, subtitle }) {
   const [step, setStep] = useState('INIT');
   const [uploadedImage, setUploadedImage] = useState(null);
   const [exportingIndex, setExportingIndex] = useState(null);
   const [aiProgress, setAiProgress] = useState('初始化视觉神经网络...');
   const [palette, setPalette] = useState({ bg: '#f2f0eb', text: '#3d3935' });
+  const [closing, setClosing] = useState(false);
   
   // 初始化提取的文案，直接填充进 DOM
   const [textData, setTextData] = useState({ title: '产品名称', sub: '产品核心描述文案' });
@@ -79,11 +80,19 @@ export default function ExportModal({ isOpen, onClose, rawText, title }) {
     return rawText.replace(/<del>[\s\S]*?<\/del>/g, '').replace(/<\/?ins>/g, '').trim();
   })();
 
+  // 淡出关闭：先播放 300ms 淡出动画，再真正卸载，避免跳转突兀
+  const handleClose = () => {
+    if (closing) return;
+    setClosing(true);
+    setTimeout(() => onClose(), 300);
+  };
+
   useEffect(() => {
     if (isOpen) {
       setStep('UPLOAD');
+      setClosing(false);
 
-      // 精准提取：优先用 AI 结构化输出的 title；没有才从正文启发式兜底（绝不读取用户原始输入）
+      // 精准提取：优先用 AI 结构化输出的 title/subtitle；没有才从正文启发式兜底（绝不读取用户原始输入）
       const sentences = cleanText.split(/[。！!？?\n|]+/).map(s => s.trim()).filter(Boolean);
       const headline = sentences[0] || '商业精选好物';
 
@@ -95,9 +104,14 @@ export default function ExportModal({ isOpen, onClose, rawText, title }) {
         if (derivedTitle.includes('文案') || derivedTitle.includes('修改')) derivedTitle = '旗舰精选';
       }
 
+      let derivedSub = subtitle && subtitle.trim() ? subtitle.trim() : '';
+      if (!derivedSub) {
+        derivedSub = headline.length > 25 ? headline.substring(0, 24) + '...' : headline;
+      }
+
       setTextData({
         title: derivedTitle,
-        sub: headline.length > 25 ? headline.substring(0, 24) + '...' : headline,
+        sub: derivedSub,
       });
     } else {
       setStep('INIT');
@@ -105,7 +119,7 @@ export default function ExportModal({ isOpen, onClose, rawText, title }) {
       setPalette({ bg: '#f2f0eb', text: '#3d3935' });
       setExportingIndex(null);
     }
-  }, [isOpen, cleanText, title]);
+  }, [isOpen, cleanText, title, subtitle]);
 
   const processImage = async (file) => {
     setStep('PROCESSING');
@@ -194,7 +208,7 @@ export default function ExportModal({ isOpen, onClose, rawText, title }) {
         link.download = `Abbel_Commercial_${Date.now()}.png`;
         link.href = canvas.toDataURL('image/png');
         link.click();
-        setTimeout(() => onClose(), 600);
+        setTimeout(() => handleClose(), 600);
       }, 300);
     } catch (error) {
       alert('导出失败，请重试');
@@ -205,8 +219,8 @@ export default function ExportModal({ isOpen, onClose, rawText, title }) {
   if (!isOpen) return null;
 
   return (
-    <div className="abbel-modal-overlay">
-      <button className="btn-close-global" onClick={onClose}>[ ESC ] ABORT</button>
+    <div className={`abbel-modal-overlay ${closing ? 'closing' : ''}`}>
+      <button className="btn-close-global" onClick={handleClose}>[ ESC ] 退出 · ABORT</button>
 
       {/* 彻底抛弃侧边栏，容器纯粹居中 */}
       <div className="abbel-modal-container-clean">

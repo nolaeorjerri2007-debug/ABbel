@@ -91,13 +91,13 @@ function Workspace() {
   const [toastMsg, setToastMsg] = useState(null);
   const [toastType, setToastType] = useState('error'); // 'error' | 'success'
 
-  // 全局轻提示触发器 (3秒后自动消失)
+  // 全局轻提示触发器 (4秒后自动消失)
   const showToast = (msg, type = 'error') => {
     setToastMsg(msg);
     setToastType(type);
     setTimeout(() => {
       setToastMsg(null);
-    }, 3000);
+    }, 4000);
   };
   // =========================================================
 
@@ -105,6 +105,7 @@ function Workspace() {
   const baseScoresRef = useRef({});
   const currentDraftRef = useRef('');
   const titleRef = useRef(''); // AI 结构化输出的产品标题（如「金桂咖啡」）
+  const subtitleRef = useRef(''); // AI 结构化输出的副标题
   const diffAbortControllerRef = useRef(null); // 追踪微调引擎的最新请求
 
   const [hoveredDesc, setHoveredDesc] = useState('');
@@ -379,9 +380,19 @@ function Workspace() {
 
       const data = await response.json()
       const outputs = data?.data?.outputs || {}
-      const answerStr = outputs.text || ''
+
+      // 兼容 Dify 输出字段名变化（text 可能被改成 draft/content/output/result 等）
+      const answerStr =
+        (typeof outputs.text === 'string' && outputs.text) ||
+        (typeof outputs.draft === 'string' && outputs.draft) ||
+        (typeof outputs.content === 'string' && outputs.content) ||
+        (typeof outputs.output === 'string' && outputs.output) ||
+        (typeof outputs.result === 'string' && outputs.result) ||
+        (typeof data?.answer === 'string' && data.answer) ||
+        ''
 
       if (!answerStr || !answerStr.trim()) {
+        console.error('[Dify 输出异常] 未找到 text/draft/content 等字段，实际 outputs =', outputs, '完整响应 =', data);
         throw new Error('返回数据为空')
       }
 
@@ -405,13 +416,17 @@ function Workspace() {
         
         finalDraft = parsed.draft || parsed.text || parsed.content || stringToParse;
         diagText = parsed.diagnosis || diagText;
-        const scoresData = parsed.scores || parsed;
+        const scoresData = parsed.scores || outputs.scores || parsed;
         mappedScores = mapScoresToSliders(scoresData);
       } catch (e) {
         // 【兼容模式】如果连正则提取后都无法 Parse（比如被严重截断），再降级为纯文本
         console.warn('>>> [主引擎兼容模式] JSON 解析彻底失败，降级为纯文本渲染', e);
         finalDraft = cleanedText;
         diagText = '> 诊断：检测到引擎返回纯文本模式或数据破损，已自动降级。';
+        // 结构化输出兜底：Dify 把 scores 作为独立变量返回时
+        if (outputs.scores) {
+          mappedScores = mapScoresToSliders(outputs.scores);
+        }
       }
 
       if (finalDraft.trim().length < 5) {
@@ -428,6 +443,15 @@ function Workspace() {
           if (m) finalTitle = m[1].trim();
         }
         if (finalTitle) titleRef.current = finalTitle;
+
+        // subtitle 多级兜底
+        let finalSub = typeof parsed.subtitle === 'string' ? parsed.subtitle.trim() : '';
+        if (!finalSub && typeof outputs.subtitle === 'string') finalSub = outputs.subtitle.trim();
+        if (!finalSub) {
+          const m = cleanedText.match(/["']subtitle["']\s*:\s*["']([^"']+)["']/);
+          if (m) finalSub = m[1].trim();
+        }
+        if (finalSub) subtitleRef.current = finalSub;
 
         setDiagnosis(diagText);
         setScores(mappedScores);
@@ -703,7 +727,7 @@ function Workspace() {
           padding: '8px 16px', 
           color: toastType === 'success' ? '#66FF88' : '#ff6b6b', 
           fontSize: '13px', fontWeight: '500',
-          zIndex: 9999, display: 'flex', alignItems: 'center', gap: '8px',
+          zIndex: 10001, display: 'flex', alignItems: 'center', gap: '8px',
           boxShadow: '0 4px 12px rgba(0,0,0,0.2)', animation: 'fadeIn 0.2s ease-out'
         }}>
           <span style={{ 
@@ -1187,6 +1211,7 @@ function Workspace() {
         onClose={() => setIsExportOpen(false)}
         rawText={currentDraftRef.current}
         title={titleRef.current}
+        subtitle={subtitleRef.current}
         parameters={stagedParams}
       />
     </div>
