@@ -907,9 +907,8 @@ function Workspace() {
               <button 
                 className="btn-primary" 
                 style={{ 
-                  padding: '8px 20px',
+                  padding: '8px 16px',
                   fontSize: '13px',
-                  height: '100%',
                   boxSizing: 'border-box' 
                 }}
                 onClick={() => setIsExportOpen(true)}

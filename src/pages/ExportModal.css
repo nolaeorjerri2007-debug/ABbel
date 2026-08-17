@@ -1,190 +1,193 @@
-/* ==================== 与工作台对齐的温润半透明美学 ==================== */
+/* ==================== 赛博机械与高透宣纸美学 ==================== */
 :root {
-  /* 遮罩：温暖的浅米色高斯模糊 */
-  --modal-overlay: rgba(242, 239, 234, 0.65);
-  /* 弹窗背景：高透光白晶毛玻璃 */
-  --modal-bg: rgba(255, 255, 255, 0.75); 
-  --modal-border: rgba(255, 255, 255, 0.9);
-  --modal-shadow: 0 24px 64px rgba(0, 0, 0, 0.08), 0 4px 16px rgba(0, 0, 0, 0.02);
-  
-  /* 文字与点缀：深空灰与品牌橘红 */
-  --text-primary: #2C2C2C;
-  --text-muted: #888888;
-  --accent-color: #E2583E; /* 提取自你界面的橘红色 */
-  --btn-bg: rgba(255, 255, 255, 0.6);
-  --btn-hover: rgba(255, 255, 255, 1);
+  /* 融合你原本的主题色 */
+  --modal-overlay: rgba(245, 242, 238, 0.85); /* 极高透光的暖白毛玻璃 */
+  --accent-color: #E2583E; /* 你的品牌橘红色 */
+  --accent-neon: #ff5722; /* 荧光状态 */
   --font-stack: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
-/* 遮罩层 */
+/* 遮罩底盘 */
 .abbel-modal-overlay {
   position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
   background: var(--modal-overlay);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   display: flex; align-items: center; justify-content: center;
   z-index: 9999;
-  animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: modalFadeIn 0.4s ease-out;
+  overflow: hidden;
 }
 
 @keyframes modalFadeIn {
-  from { opacity: 0; transform: translateY(10px) scale(0.99); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-/* 修复弹窗的整体边框和背景 */
-.abbel-modal-container {
-  display: flex;
-  width: 900px;
-  height: 600px; 
-  /* 改用纯净的白底，去掉多余的边框线导致的不适感 */
-  background: #ffffff; 
-  border-radius: 16px;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.12); /* 加深一点阴影让它浮起来 */
-  overflow: hidden;
-  font-family: var(--font-stack);
-  color: var(--text-primary);
-  /* 确保没有被外部样式污染 */
-  box-sizing: border-box; 
+.btn-close-global {
+  position: absolute; top: 32px; right: 40px;
+  background: none; border: none; font-family: var(--font-mono);
+  font-size: 13px; color: #888; cursor: pointer; transition: 0.3s;
+  letter-spacing: 2px;
 }
+.btn-close-global:hover { color: var(--accent-color); }
 
-/* ==================== 左侧：沉浸式预览区 ==================== */
-.abbel-modal-preview {
-  flex: 5.5;
-  background: rgba(245, 242, 238, 0.4); /* 极浅的暖灰底色 */
+/* ================= 第一幕：机械荧光故障字 ================= */
+.cyber-glitch-container {
   display: flex; align-items: center; justify-content: center;
+}
+.glitch-text {
+  font-family: var(--font-mono);
+  font-size: 24px; font-weight: 600;
+  color: var(--accent-neon);
   position: relative;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px rgba(226, 88, 62, 0.6);
+  animation: glitch 1.5s infinite;
+}
+@keyframes glitch {
+  0% { opacity: 1; transform: translateX(0); }
+  2% { opacity: 0.8; transform: translateX(-2px); }
+  4% { opacity: 1; transform: translateX(2px); }
+  40% { opacity: 1; }
+  42% { opacity: 0.5; }
+  44% { opacity: 1; }
+  100% { opacity: 1; }
 }
 
-/* 海报实体 */
+/* ================= 第二幕：复古扫描卡槽 ================= */
+.scanner-container {
+  display: flex; flex-direction: column; align-items: center;
+}
+.scanner-slot {
+  width: 400px; height: 260px;
+  border: 1px dashed rgba(226, 88, 62, 0.5);
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 16px; position: relative;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  cursor: pointer; overflow: hidden;
+  box-shadow: inset 0 0 40px rgba(0,0,0,0.02), 0 20px 40px rgba(0,0,0,0.05);
+  transition: all 0.3s;
+}
+.scanner-slot:hover {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: var(--accent-color);
+  box-shadow: 0 20px 60px rgba(226, 88, 62, 0.15);
+}
+.scanner-laser {
+  position: absolute; top: 0; left: 0; width: 100%; height: 2px;
+  background: var(--accent-color);
+  box-shadow: 0 0 15px var(--accent-neon);
+  animation: scan 2.5s infinite ease-in-out;
+}
+@keyframes scan {
+  0%, 100% { top: 10%; opacity: 0; }
+  10%, 90% { opacity: 1; }
+  50% { top: 90%; }
+}
+.scanner-brackets {
+  font-family: var(--font-mono); font-size: 18px; color: var(--accent-color);
+  margin-bottom: 12px; letter-spacing: 2px; font-weight: 600;
+}
+.scanner-hint { font-size: 13px; color: #888; letter-spacing: 1px; }
+
+/* ================= 第三幕 & 第四幕：扇形牌局引擎 ================= */
+.poker-desk {
+  width: 100%; height: 100%; position: relative;
+  display: flex; flex-direction: column; align-items: center;
+}
+
+.poker-hint-text {
+  position: absolute; top: 80px; text-align: center;
+  font-family: var(--font-mono); color: #333; animation: fadeInDown 0.6s ease-out;
+}
+.poker-hint-text span { font-size: 20px; font-weight: 600; letter-spacing: 4px; }
+.poker-hint-text p { font-size: 12px; color: #888; margin-top: 8px; letter-spacing: 1px; }
+
+.poker-hand {
+  position: absolute; bottom: 50px;
+  display: flex; justify-content: center; align-items: flex-end;
+  perspective: 1200px;
+}
+
+.poker-card {
+  position: absolute; bottom: 0;
+  transform-origin: bottom center;
+  transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  cursor: pointer;
+  /* 基础进场动画 */
+  animation: dealCard 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes dealCard {
+  from { opacity: 0; transform: translateY(-400px) scale(0.5); }
+}
+
+/* 扇形排布数学计算 */
+.poker-card.card-0 { transform: rotate(-14deg) translate(-140px, -20px); }
+.poker-card.card-1 { transform: rotate(0deg) translate(0, -40px); z-index: 2; }
+.poker-card.card-2 { transform: rotate(14deg) translate(140px, -20px); }
+
+/* 看牌交互 (Hover抽出) */
+.poker-card:hover {
+  z-index: 10 !important;
+  /* 统一向上抽出，回正角度，微缩放 */
+  transform: rotate(0deg) translate(0, -120px) scale(1.08) !important;
+  box-shadow: 0 40px 80px rgba(0,0,0,0.25);
+}
+
+/* 打牌动画 (向上飞出并伴随冲击波) */
+.poker-card.fly-out {
+  transform: translateY(-1200px) scale(1.1) rotate(5deg) !important;
+  opacity: 0; z-index: 20;
+  transition: all 0.5s cubic-bezier(0.55, 0.085, 0.68, 0.53);
+}
+.poker-card.fade-out {
+  opacity: 0 !important; pointer-events: none;
+  transform: translateY(100px) !important;
+}
+
+/* ================= 核心：三种神仙海报排版 ================= */
+/* 共同底座 */
 .poster-canvas {
-  position: relative; background: #f5f5f7; /* 海报整体底色变灰，衬托里面的白卡片 */
-  display: flex; flex-direction: column;
-  box-shadow: 0 16px 32px rgba(0,0,0,0.06); 
-  overflow: hidden;
-  padding: 16px; /* 给整张海报加一圈白边（类似拍立得边框） */
-  box-sizing: border-box;
+  display: flex; flex-direction: column; overflow: hidden;
+  box-shadow: 0 16px 40px rgba(0,0,0,0.15);
+  box-sizing: border-box; font-family: var(--font-stack);
+  pointer-events: none; /* 防止内部元素干扰点击 */
 }
+.poster-image-area { width: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.poster-image-area img { width: 100%; height: 100%; object-fit: cover; }
+.poster-copy { font-size: 13px; line-height: 1.7; margin: 0; flex-grow: 1; text-align: justify; }
+.poster-watermark { font-size: 9px; color: #999; letter-spacing: 0.5px; border-top: 1px solid rgba(0,0,0,0.05); padding-top: 8px; margin-top: 16px;}
 
-.poster-canvas.theme-light {
-  --poster-bg: #FFFFFF; --poster-text: #2C2C2C; --poster-muted: #999999; --poster-accent: #F5F5F5;
+/* 模板 1：小红书悬浮风 (3:4) */
+.tpl-social {
+  width: 300px; height: 400px; background: #f5f5f7; padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.8);
 }
-.poster-canvas.theme-dark {
-  --poster-bg: #1A1A1A; --poster-text: #F2F2F2; --poster-muted: #777777; --poster-accent: #2A2A2A;
+.tpl-social .poster-image-area { height: 60%; border-radius: 8px; }
+.tpl-social .poster-text-area {
+  margin-top: -24px; margin-left: 12px; margin-right: 12px;
+  background: rgba(255,255,255,0.95); padding: 20px; border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.1); position: relative; z-index: 2; display: flex; flex-direction: column; min-height: 140px;
 }
+.tpl-social .deco-line { width: 24px; height: 2px; background: #222; margin-bottom: 12px; opacity: 0.8; }
+.tpl-social .poster-copy { color: #222; }
 
-.poster-canvas.ratio-3-4 { aspect-ratio: 3/4; max-width: 340px; width: 100%; }
-.poster-canvas.ratio-1-1 { aspect-ratio: 1/1; max-width: 420px; width: 100%; }
-
-.poster-image-area {
-  /* 去掉 flex 比例，改为固定高度，让它充满上半部分 */
-  height: 60%; 
-  width: 100%;
-  background: #e0e0e0; position: relative; z-index: 1;
-  display: flex; align-items: center; justify-content: center; cursor: pointer; overflow: hidden;
-  border-radius: 12px; /* 图片本身也带圆角 */
+/* 模板 2：杂志留白风 (正方形图 1:1) */
+.tpl-minimal {
+  width: 320px; height: 440px; background: #ffffff; padding: 24px; border-radius: 4px; border: 1px solid #eee;
 }
-.poster-img { width: 100%; height: 100%; object-fit: cover; }
-.poster-placeholder { display: flex; flex-direction: column; align-items: center; font-size: 12px; color: var(--poster-muted); }
+.tpl-minimal .poster-image-area.square { aspect-ratio: 1/1; height: auto; margin-bottom: 24px; }
+.tpl-minimal .poster-text-area { display: flex; flex-direction: column; flex-grow: 1; }
+.tpl-minimal .poster-copy { color: #111; font-weight: 500; font-size: 14px; text-align: center; }
+.tpl-minimal .poster-watermark { text-align: center; border-top: none; }
 
-/* 核心杀招：悬浮的文字卡片 */
-.poster-text-area {
-  /* 强行往上提 40px，覆盖到图片上面 */
-  margin-top: -40px; 
-  /* 左右各留一点缝隙，不要占满 */
-  margin-left: 20px;
-  margin-right: 20px;
-  /* 文字区变成一张独立的白卡片 */
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  padding: 32px 24px; 
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.08); /* 给卡片加阴影 */
-  
-  display: flex; flex-direction: column;
-  position: relative; z-index: 2; /* 层级高于图片 */
+/* 模板 3：暗黑终端赛博风 */
+.tpl-cyber {
+  width: 300px; height: 400px; background: #111111; border-radius: 8px; border: 1px solid #333;
 }
-
-.poster-copy {
-  color: var(--poster-text); font-size: 13px; line-height: 1.8;
-  margin: 0; flex-grow: 1; text-align: justify;
-}
-
-.poster-watermark {
-  margin-top: 24px; display: flex; flex-direction: column; gap: 6px;
-}
-.watermark-line { width: 100%; height: 1px; background: var(--poster-text); opacity: 0.08; }
-.watermark-text { font-size: 9px; color: var(--poster-muted); letter-spacing: 0.5px; }
-
-/* ==================== 右侧：通透控制台 ==================== */
-/* 修复右侧控制台的顶部挤压问题 */
-.abbel-modal-sidebar {
-  flex: 4.5;
-  background: #ffffff; /* 统一白底 */
-  border-left: 1px solid rgba(0,0,0,0.06); /* 淡淡的分隔线 */
-  display: flex; flex-direction: column;
-}
-
-.sidebar-header {
-  /* 👈 大幅增加这里的 padding，让标题有呼吸感，解决截图里顶天花板的问题 */
-  padding: 32px 32px 24px 32px; 
-  display: flex; justify-content: space-between; align-items: center;
-  border-bottom: 1px solid rgba(0,0,0,0.06);
-}
-.sidebar-header h3 { 
-  margin: 0; 
-  font-size: 14px; /* 字体稍微加大一点 */
-  font-weight: 600; 
-  color: var(--text-primary); 
-}
-.btn-close { 
-  background: none; border: none; 
-  font-size: 13px; /* 关闭按钮也大一点 */
-  color: var(--text-muted); cursor: pointer; transition: 0.2s; 
-}
-.btn-close:hover { color: var(--text-primary); }
-
-.sidebar-tabs { display: flex; border-bottom: 1px solid rgba(0,0,0,0.03); }
-.sidebar-tabs button {
-  flex: 1; background: none; border: none; padding: 16px 0; font-size: 13px; 
-  color: var(--text-muted); cursor: pointer; position: relative; transition: 0.2s;
-}
-.sidebar-tabs button.tab-active { color: var(--text-primary); font-weight: 600; }
-.sidebar-tabs button.tab-active::after {
-  content: ''; position: absolute; bottom: -1px; left: 25%; width: 50%; height: 2px;
-  background: var(--accent-color); border-radius: 2px;
-}
-
-.sidebar-controls { padding: 24px; flex-grow: 1; overflow-y: auto; }
-
-.control-group { margin-bottom: 28px; }
-.control-group label { display: block; font-size: 11px; font-weight: 600; color: var(--text-muted); margin-bottom: 10px; letter-spacing: 0.5px; }
-
-/* 按钮组模拟单选 */
-.radio-group { display: flex; gap: 8px; }
-.radio-group button {
-  flex: 1; background: var(--btn-bg); border: 1px solid rgba(0,0,0,0.05);
-  padding: 10px; font-size: 12px; color: var(--text-muted);
-  cursor: pointer; border-radius: 8px; transition: all 0.2s ease;
-}
-.radio-group button:hover { background: var(--btn-hover); color: var(--text-primary); }
-.radio-group button.active {
-  background: #ffffff; border-color: rgba(0,0,0,0.1);
-  color: var(--text-primary); font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-}
-
-.checkbox-group label { display: flex; align-items: center; gap: 8px; color: var(--text-primary); font-weight: 400; font-size: 12px; cursor: pointer; }
-.checkbox-group input[type="checkbox"] { accent-color: var(--accent-color); width: 14px; height: 14px; }
-
-.sidebar-footer { padding: 24px; border-top: 1px solid rgba(0,0,0,0.03); background: rgba(255,255,255,0.2); }
-
-.btn-primary {
-  background: var(--accent-color); color: #fff; border: none; padding: 12px; font-size: 13px; font-weight: 600;
-  cursor: pointer; letter-spacing: 1px; border-radius: 8px; transition: all 0.2s;
-}
-.btn-primary:hover { background: #d04b33; box-shadow: 0 4px 12px rgba(226, 88, 62, 0.2); }
-.btn-block { width: 100%; display: block; }
-.btn-secondary { background: var(--btn-bg); border: 1px solid rgba(0,0,0,0.05); color: var(--text-primary); cursor: pointer; border-radius: 8px; width: 100%; }
-.btn-secondary:hover { background: #ffffff; }
-.btn-sm { padding: 8px; font-size: 11px; }
+.tpl-cyber .poster-image-area { height: 50%; opacity: 0.85; filter: grayscale(20%) contrast(120%); }
+.tpl-cyber .poster-text-area { padding: 24px; display: flex; flex-direction: column; flex-grow: 1; }
+.tpl-cyber .poster-copy { color: #66FF88; font-family: var(--font-mono); }
+.tpl-cyber .poster-watermark { color: #555; border-top-color: #333; font-family: var(--font-mono); }
