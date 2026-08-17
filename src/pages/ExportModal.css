@@ -1,123 +1,55 @@
-/* ==================== 商业级海报引擎美学 ==================== */
-:root {
-  --modal-overlay: rgba(242, 239, 234, 0.45); 
-  --accent-color: #E2583E; 
-  --accent-neon: #ff5722; 
-  --font-sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  /* 极其重要：强制引入主流系统的中文衬线字体（宋体）以保证高级感 */
-  --font-serif: "Songti SC", "STSong", "Noto Serif SC", SimSun, "Times New Roman", serif; 
+/* ==================== 侧边控制台样式 ==================== */
+.abbel-modal-sidebar {
+  position: absolute; right: 0; top: 0; width: 280px; height: 100%;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border-left: 1px solid rgba(0,0,0,0.05);
+  display: flex; flex-direction: column; z-index: 100;
+  box-shadow: -10px 0 30px rgba(0,0,0,0.02);
+  transform: translateX(100%);
+  animation: slideInRight 0.4s 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+@keyframes slideInRight { to { transform: translateX(0); } }
 
-/* 基础交互遮罩与动画 */
-.abbel-modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--modal-overlay); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); display: flex; align-items: center; justify-content: center; z-index: 9999; animation: modalFadeIn 0.3s ease-out; overflow: hidden; }
-@keyframes modalFadeIn { from { opacity: 0; } to { opacity: 1; } }
-.btn-close-global { position: absolute; top: 32px; right: 40px; background: none; border: none; font-family: var(--font-mono); font-size: 13px; color: #666; cursor: pointer; transition: 0.3s; letter-spacing: 2px; z-index: 100; }
-.btn-close-global:hover { color: var(--accent-color); }
-.scanner-container { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; }
-.scanner-slot { width: 440px; height: 280px; border: 1px dashed rgba(226, 88, 62, 0.4); background: rgba(255, 255, 255, 0.6); border-radius: 16px; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; overflow: hidden; box-shadow: inset 0 0 40px rgba(0,0,0,0.02), 0 20px 60px rgba(0,0,0,0.06); transition: all 0.3s ease; }
-.scanner-slot:hover { background: rgba(255, 255, 255, 0.9); border-color: var(--accent-color); box-shadow: 0 20px 60px rgba(226, 88, 62, 0.15); }
-.scanner-laser { position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: var(--accent-color); box-shadow: 0 0 15px var(--accent-neon); animation: scan 2.5s infinite ease-in-out; }
-@keyframes scan { 0%, 100% { top: 10%; opacity: 0; } 10%, 90% { opacity: 1; } 50% { top: 90%; } }
-.scanner-brackets { font-family: var(--font-mono); font-size: 18px; color: var(--accent-color); margin-bottom: 12px; letter-spacing: 2px; font-weight: 600; }
-.scanner-hint { font-size: 13px; color: #666; letter-spacing: 1px; }
-
-/* AI计算状态 */
-.ai-processing-container { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; animation: fadeIn 0.3s ease; }
-.cube-loader { width: 40px; height: 40px; position: relative; margin-bottom: 24px; transform: rotateZ(45deg); }
-.cube-loader .cube { float: left; width: 50%; height: 50%; position: relative; transform: scale(1.1); }
-.cube-loader .cube:before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--accent-color); animation: cube-fold 2.4s infinite linear both; transform-origin: 100% 100%; }
-.cube-loader .cube:nth-child(2) { transform: scale(1.1) rotateZ(90deg); }
-.cube-loader .cube:nth-child(4) { transform: scale(1.1) rotateZ(180deg); }
-.cube-loader .cube:nth-child(3) { transform: scale(1.1) rotateZ(270deg); }
-.cube-loader .cube:nth-child(2):before { animation-delay: 0.3s; }
-.cube-loader .cube:nth-child(4):before { animation-delay: 0.6s; }
-.cube-loader .cube:nth-child(3):before { animation-delay: 0.9s; }
-@keyframes cube-fold { 0%, 10% { transform: perspective(140px) rotateX(-180deg); opacity: 0; } 25%, 75% { transform: perspective(140px) rotateX(0deg); opacity: 1; } 90%, 100% { transform: perspective(140px) rotateY(180deg); opacity: 0; } }
-.ai-progress-text { font-family: var(--font-mono); font-size: 12px; color: var(--accent-color); letter-spacing: 2px; text-transform: uppercase; }
-
-/* 扇形牌局引擎 */
-.poker-desk { width: 100%; height: 100%; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-.poker-hint-text { position: absolute; top: 12%; text-align: center; font-family: var(--font-mono); color: #333; animation: fadeInDown 0.6s ease-out; }
-.poker-hint-text span { font-size: 18px; font-weight: 600; letter-spacing: 4px; }
-.poker-hint-text p { font-size: 12px; color: #888; margin-top: 8px; letter-spacing: 1px; }
-.poker-hand { position: relative; width: 100%; height: 500px; display: flex; justify-content: center; align-items: center; margin-top: 60px; }
-
-.poker-card { position: absolute; transform-origin: bottom center; transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1); cursor: pointer; animation: dealCard 0.8s cubic-bezier(0.16, 1, 0.3, 1) backwards; }
-@keyframes dealCard { from { opacity: 0; transform: translateY(300px) scale(0.5); } }
-.poker-card.card-0 { transform: rotate(-12deg) translateX(-180px) translateY(30px); z-index: 1; }
-.poker-card.card-1 { transform: rotate(0deg) translateX(0) translateY(0); z-index: 2; }
-.poker-card.card-2 { transform: rotate(12deg) translateX(180px) translateY(30px); z-index: 1; }
-.poker-card.card-0:hover { transform: rotate(-4deg) translateX(-280px) translateY(-20px) scale(1.08) !important; z-index: 10 !important; box-shadow: 0 40px 80px rgba(0,0,0,0.25); }
-.poker-card.card-1:hover { transform: rotate(0deg) translateX(0) translateY(-60px) scale(1.08) !important; z-index: 10 !important; box-shadow: 0 40px 80px rgba(0,0,0,0.25); }
-.poker-card.card-2:hover { transform: rotate(4deg) translateX(280px) translateY(-20px) scale(1.08) !important; z-index: 10 !important; box-shadow: 0 40px 80px rgba(0,0,0,0.25); }
-.poker-card.fly-out { transform: translateY(-800px) scale(1.1) rotate(0deg) !important; opacity: 0; z-index: 20 !important; transition: all 0.6s cubic-bezier(0.55, 0.085, 0.68, 0.53); }
-.poker-card.fade-out { opacity: 0 !important; pointer-events: none; transform: translateY(200px) scale(0.9) !important; }
-
-/* ================= 核心修复：图像加载与物理渲染 ================= */
-.poster-canvas {
-  width: 320px; height: 460px; 
-  background-color: var(--poster-bg);
-  position: relative; overflow: hidden;
-  box-shadow: 0 16px 40px rgba(0,0,0,0.12);
-  border-radius: 4px; pointer-events: none; 
+.abbel-input, .abbel-textarea {
+  width: 100%; background: rgba(0,0,0,0.03); border: 1px solid transparent;
+  padding: 12px 14px; font-size: 13px; color: var(--text-primary);
+  border-radius: 8px; margin-bottom: 8px; box-sizing: border-box;
+  font-family: var(--font-stack); transition: all 0.2s;
 }
-
-/* 彻底解决图片变零的问题 */
-.poster-image-wrap {
-  position: absolute; 
-  display: block; /* 移除 flex 坍塌隐患 */
-  z-index: 2;
+.abbel-input:focus, .abbel-textarea:focus {
+  outline: none; background: #ffffff; border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px rgba(226, 88, 62, 0.1);
 }
-.poster-image-wrap img {
-  width: 100%; height: 100%; display: block;
-  object-fit: contain;
-  /* 产品落地阴影魔法 */
-  filter: drop-shadow(0 20px 30px rgba(0,0,0,0.2)); 
-}
+.abbel-textarea { resize: none; line-height: 1.5; }
 
-/* --- 模板 1：东方雅致/草本风 (参考人参茶) --- */
+/* ==================== 排版防爆物理护盾 ==================== */
+/* 东方雅致：主标题绝不许连成一排，强制断行保护 */
 .tpl-oriental .oriental-text-wrap {
-  position: absolute; top: 44px; left: 32px; z-index: 3; color: var(--poster-text);
-}
-.tpl-oriental .oriental-title {
-  /* 使用高雅的宋体衬线字 */
-  font-family: var(--font-serif); font-size: 38px; line-height: 1.25; font-weight: 700; margin: 0; letter-spacing: 2px;
+  max-width: 240px; 
 }
 .tpl-oriental .oriental-subtitle {
-  font-family: var(--font-serif); font-size: 14px; font-weight: 500; margin-top: 18px; opacity: 0.85; letter-spacing: 1px;
+  /* 强制最多两行，多余直接变成省略号，绝不侵占留白 */
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden; text-overflow: ellipsis; max-width: 220px;
 }
-.tpl-oriental .oriental-image-wrap {
-  bottom: 20px; left: 0; width: 100%; height: 60%;
-}
+.tpl-oriental .oriental-image-wrap { padding: 24px; box-sizing: border-box; } /* 确保图片不会顶满边缘 */
 
-/* --- 模板 2：现代极简/红酒风 (参考珑纳红酒) --- */
-.tpl-wine .wine-text-wrap {
-  position: absolute; top: 40px; width: 100%; text-align: center; z-index: 3; color: var(--poster-text);
-}
+/* 现代极简：严格控制宽度 */
+.tpl-wine .wine-text-wrap { padding: 0 24px; box-sizing: border-box; }
 .tpl-wine .wine-title {
-  font-family: var(--font-serif); font-size: 32px; font-weight: 700; margin: 0; letter-spacing: 8px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;
 }
 .tpl-wine .wine-subtitle {
-  font-family: var(--font-sans); font-size: 10px; font-weight: 500; margin-top: 8px; opacity: 0.6; letter-spacing: 3px; text-transform: uppercase;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;
 }
-.tpl-wine .wine-image-wrap {
-  top: 130px; width: 100%; height: 65%;
-}
+.tpl-wine .wine-image-wrap { padding: 32px; box-sizing: border-box; }
 
-/* --- 模板 3：先锋杂志/床品风 (参考 VISIONA 床单) --- */
-.tpl-magazine .magazine-top-bar {
-  position: absolute; top: 24px; left: 24px; right: 24px;
-  display: flex; justify-content: space-between;
-  font-family: var(--font-sans); font-weight: bold; font-size: 10px; color: var(--poster-text); opacity: 0.5; z-index: 3; letter-spacing: 1px; text-transform: uppercase;
+/* 先锋杂志：巨型字体裁剪 */
+.tpl-magazine .magazine-top-bar span:first-child {
+  max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .tpl-magazine .magazine-bg-text {
-  position: absolute; top: 42%; left: 0; width: 100%; transform: translateY(-50%);
-  text-align: center; 
-  /* 选用极其粗壮的西文字体，打造巨物背景感 */
-  font-family: Impact, "Arial Black", var(--font-sans); font-size: 72px; font-weight: 900;
-  color: #ffffff; opacity: 0.95; z-index: 1; letter-spacing: 4px;
+  white-space: nowrap; overflow: hidden; width: 100%;
 }
-.tpl-magazine .magazine-image-wrap {
-  bottom: 0; width: 100%; height: 65%; z-index: 2;
-}
+.tpl-magazine .magazine-image-wrap { padding: 16px; box-sizing: border-box; }
