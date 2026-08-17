@@ -104,6 +104,7 @@ function Workspace() {
   // 用于 AUTO 引擎对比的基准分数和文案缓存
   const baseScoresRef = useRef({});
   const currentDraftRef = useRef('');
+  const titleRef = useRef(''); // AI 结构化输出的产品标题（如「金桂咖啡」）
   const diffAbortControllerRef = useRef(null); // 追踪微调引擎的最新请求
 
   const [hoveredDesc, setHoveredDesc] = useState('');
@@ -417,6 +418,9 @@ function Workspace() {
       } else {
         setDraft(finalDraft);
         currentDraftRef.current = finalDraft;
+        if (typeof parsed.title === 'string' && parsed.title.trim()) {
+          titleRef.current = parsed.title.trim();
+        }
         setDiagnosis(diagText);
         setScores(mappedScores);
         baseScoresRef.current = mappedScores;
@@ -1174,6 +1178,7 @@ function Workspace() {
         isOpen={isExportOpen} 
         onClose={() => setIsExportOpen(false)}
         rawText={currentDraftRef.current}
+        title={titleRef.current}
         parameters={stagedParams}
       />
     </div>
