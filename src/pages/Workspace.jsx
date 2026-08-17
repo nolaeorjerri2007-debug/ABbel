@@ -59,6 +59,7 @@ function Workspace() {
   const [appendQuery, setAppendQuery] = useState('');
   const [history, setHistory] = useState([]);
   const [isExportOpen, setIsExportOpen] = useState(false);
+  const [isDraftHovered, setIsDraftHovered] = useState(false);
 
   // ⚠️ 新增悬浮菜单相关状态
   const [savedTemplates, setSavedTemplates] = useState([]);
@@ -848,8 +849,44 @@ function Workspace() {
                 }}>
                   {diagnosis}
                 </div>
-                <div className="draft-text-output" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                <div
+                  className="draft-text-output"
+                  onMouseEnter={() => setIsDraftHovered(true)}
+                  onMouseLeave={() => setIsDraftHovered(false)}
+                  onClick={() => {
+                    navigator.clipboard.writeText(draft).catch(() => {});
+                    showToast('文案已提取至剪贴板', 'success');
+                  }}
+                  style={{
+                    whiteSpace: 'pre-wrap',
+                    wordBreak: 'break-word',
+                    position: 'relative',
+                    cursor: 'copy',
+                    padding: '16px',
+                    margin: '-16px',
+                    borderRadius: '8px',
+                    boxShadow: isDraftHovered ? 'inset 0 0 0 1px rgba(209, 62, 20, 0.4)' : 'inset 0 0 0 1px transparent',
+                    backgroundColor: isDraftHovered ? 'rgba(209, 62, 20, 0.05)' : 'transparent',
+                    transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
+                  }}
+                >
                   {draft}
+
+                  <span style={{
+                    position: 'absolute',
+                    bottom: '12px',
+                    right: '16px',
+                    fontSize: '10px',
+                    fontWeight: 600,
+                    letterSpacing: '1px',
+                    color: 'var(--color-accent-primary)',
+                    opacity: isDraftHovered ? 1 : 0,
+                    transform: isDraftHovered ? 'translateY(0)' : 'translateY(4px)',
+                    transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+                    pointerEvents: 'none'
+                  }}>
+                    [ CLICK TO COPY ]
+                  </span>
                 </div>
               </div>
             ) : (
@@ -947,17 +984,9 @@ function Workspace() {
                   fontSize: '13px',
                   boxSizing: 'border-box' 
                 }}
-                onClick={() => {
-                  // 1. 静默复制文案到剪贴板
-                  if (currentDraftRef.current) {
-                    navigator.clipboard.writeText(currentDraftRef.current).catch(() => {});
-                    showToast('文案已提取至剪贴板', 'success');
-                  }
-                  // 2. 弹窗直接进入上传海报阶段
-                  setIsExportOpen(true);
-                }}
+                onClick={() => setIsExportOpen(true)}
               >
-                导出图文
+                视觉渲染
               </button>
             </div>
           </div>
