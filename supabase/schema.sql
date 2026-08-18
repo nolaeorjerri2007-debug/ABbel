@@ -133,3 +133,24 @@ as $$
 $$;
 
 grant execute on function public.sync_my_profile(text, text) to authenticated;
+
+-- =============================================================
+-- 9. 记忆槽 4 上限：库层强制每个用户最多 4 个模板
+-- =============================================================
+create or replace function public.enforce_template_limit()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if (select count(*) from public.templates where user_id = new.user_id) >= 4 then
+    raise exception '记忆槽已满（最多 4 个模板）';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger trg_templates_limit
+  before insert on public.templates
+  for each row execute function public.enforce_template_limit();

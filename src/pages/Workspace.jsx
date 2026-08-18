@@ -667,7 +667,7 @@ function Workspace() {
       navigator.clipboard.writeText(fingerprint).catch(() => {});
     } catch (e) {
       console.error('保存模板失败', e);
-      showToast('保存失败，请稍后重试', 'error');
+      showToast(e?.message || '保存失败，请稍后重试', 'error');
     }
   };
   // ===================================================

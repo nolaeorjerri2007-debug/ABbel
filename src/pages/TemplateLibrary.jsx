@@ -135,7 +135,7 @@ function TemplateLibrary() {
       showToast(`已将 [${template.title}] 配置添加至您的记忆槽！`);
     } catch (e) {
       console.error('收藏模板失败', e);
-      showToast('收藏失败，请稍后重试', 'error');
+      showToast(e?.message || '收藏失败，请稍后重试', 'error');
     }
   };
 
