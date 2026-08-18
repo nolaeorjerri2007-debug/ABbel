@@ -1,9 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useUser } from '@clerk/clerk-react';
 import './Settings.css';
 
 function Settings() {
   const navigate = useNavigate();
+  const { user } = useUser();
+  const displayName = user?.fullName || user?.username || user?.primaryEmailAddress?.emailAddress?.split('@')[0] || 'OPERATOR';
+  const email = user?.primaryEmailAddress?.emailAddress || '';
   const [activeMenu, setActiveMenu] = useState('设置');
   const [activeSection, setActiveSection] = useState('section-account');
   const [toastMsg, setToastMsg] = useState(null);
@@ -197,8 +201,8 @@ function Settings() {
                   <svg viewBox="0 0 24 24" style={{ width: '40px', height: '40px', stroke: 'var(--lcd-text-bright)', strokeWidth: 1.5, fill: 'none' }}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                 </div>
                 <div className="avatar-info">
-                  <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', color: 'var(--color-text-primary)' }}>OPERATOR_01</h3>
-                  <p style={{ margin: '0 0 12px 0', fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--color-text-secondary)' }}>ID: 88A4-9B2C-773X</p>
+                  <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', color: 'var(--color-text-primary)' }}>{displayName}</h3>
+                  <p style={{ margin: '0 0 12px 0', fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--color-text-secondary)' }}>{email}</p>
                   <button className="btn-tool" onClick={() => showToast('[SYS_CMD] 唤醒本地文件接口...')}>
                     <svg viewBox="0 0 24 24" style={{ width: '14px', height: '14px', stroke: 'currentColor', fill: 'none', strokeWidth: 2 }}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                     更新操作员图像
@@ -209,11 +213,11 @@ function Settings() {
               <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '24px' }}>
                 <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <label className="form-label" style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-text-secondary)' }}>操作员代号 (Username)</label>
-                  <input type="text" className="form-input" defaultValue="OPERATOR_01" />
+                  <input type="text" className="form-input" defaultValue={displayName} />
                 </div>
                 <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <label className="form-label" style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-text-secondary)' }}>通讯节点 (Email)</label>
-                  <input type="email" className="form-input" defaultValue="operator.01@babel.sys" disabled />
+                  <input type="email" className="form-input" defaultValue={email} disabled />
                 </div>
               </div>
             </div>

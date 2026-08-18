@@ -130,16 +130,13 @@ function Profile() {
                 <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--color-text-primary)' }}>{usageCount.toLocaleString()} / 5,000</span>
               </div>
               <div style={{ display: 'flex', gap: '2px', background: 'rgba(0,0,0,0.05)', padding: '2px', borderRadius: '2px', boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.1)' }}>
-                <div style={{ height: '6px', flex: 1, background: 'var(--color-accent-primary)', borderRadius: '1px', boxShadow: '0 0 2px var(--color-accent-primary)' }}></div>
-                <div style={{ height: '6px', flex: 1, background: 'var(--color-accent-primary)', borderRadius: '1px', boxShadow: '0 0 2px var(--color-accent-primary)' }}></div>
-                <div style={{ height: '6px', flex: 1, background: 'var(--color-accent-primary)', borderRadius: '1px', boxShadow: '0 0 2px var(--color-accent-primary)' }}></div>
-                <div style={{ height: '6px', flex: 1, background: 'var(--color-accent-primary)', borderRadius: '1px', boxShadow: '0 0 2px var(--color-accent-primary)' }}></div>
-                <div style={{ height: '6px', flex: 1, background: 'var(--color-accent-primary)', borderRadius: '1px', boxShadow: '0 0 2px var(--color-accent-primary)' }}></div>
-                <div style={{ height: '6px', flex: 1, background: 'var(--color-accent-primary)', borderRadius: '1px', boxShadow: '0 0 2px var(--color-accent-primary)' }}></div>
-                <div style={{ height: '6px', flex: 1, background: 'var(--color-accent-primary)', borderRadius: '1px', boxShadow: '0 0 2px var(--color-accent-primary)' }}></div>
-                <div style={{ height: '6px', flex: 1, background: 'rgba(0,0,0,0.1)', borderRadius: '1px' }}></div>
-                <div style={{ height: '6px', flex: 1, background: 'rgba(0,0,0,0.1)', borderRadius: '1px' }}></div>
-                <div style={{ height: '6px', flex: 1, background: 'rgba(0,0,0,0.1)', borderRadius: '1px' }}></div>
+                {Array.from({ length: 10 }).map((_, i) => {
+                  const filled = Math.round((usageCount / 5000) * 10);
+                  const on = i < filled;
+                  return (
+                    <div key={i} style={{ height: '6px', flex: 1, background: on ? 'var(--color-accent-primary)' : 'rgba(0,0,0,0.1)', borderRadius: '1px', boxShadow: on ? '0 0 2px var(--color-accent-primary)' : 'none' }}></div>
+                  );
+                })}
               </div>
             </div>
             
@@ -153,10 +150,12 @@ function Profile() {
                 <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--color-text-primary)' }}>{savedTemplates.length} / 4</span>
               </div>
               <div style={{ display: 'flex', gap: '2px', background: 'rgba(0,0,0,0.05)', padding: '2px', borderRadius: '2px', boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.1)' }}>
-                <div style={{ height: '6px', flex: 1, background: 'var(--color-accent-primary)', borderRadius: '1px', boxShadow: '0 0 2px var(--color-accent-primary)' }}></div>
-                <div style={{ height: '6px', flex: 1, background: 'var(--color-accent-primary)', borderRadius: '1px', boxShadow: '0 0 2px var(--color-accent-primary)' }}></div>
-                <div style={{ height: '6px', flex: 1, background: 'rgba(0,0,0,0.1)', borderRadius: '1px' }}></div>
-                <div style={{ height: '6px', flex: 1, background: 'rgba(0,0,0,0.1)', borderRadius: '1px' }}></div>
+                {Array.from({ length: 4 }).map((_, i) => {
+                  const on = i < Math.min(savedTemplates.length, 4);
+                  return (
+                    <div key={i} style={{ height: '6px', flex: 1, background: on ? 'var(--color-accent-primary)' : 'rgba(0,0,0,0.1)', borderRadius: '1px', boxShadow: on ? '0 0 2px var(--color-accent-primary)' : 'none' }}></div>
+                  );
+                })}
               </div>
             </div>
           </div>
