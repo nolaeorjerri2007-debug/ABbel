@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import { useAuth } from '@clerk/clerk-react'
 
@@ -9,33 +8,26 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   throw new Error('缺少环境变量：VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY')
 }
 
-// 单例 Supabase 客户端。会话由 Clerk 管理，故关闭 Supabase 自身的会话持久化。
+// 单例 Supabase 客户端。用 global.fetch 在每次请求时现取 Clerk 的「supabase」模板令牌，
+// 直接注入 Authorization 头（官方推荐做法，规避 setSession 挂令牌不生效的问题）。
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
     persistSession: false,
     autoRefreshToken: false,
     detectSessionInUrl: false,
   },
+  global: {
+    fetch: async (url, options = {}) => {
+      const token = await window.Clerk?.session?.getToken({ template: 'supabase' })
+      const headers = new Headers(options?.headers)
+      if (token) headers.set('Authorization', `Bearer ${token}`)
+      return fetch(url, { ...options, headers })
+    },
+  },
 })
 
-// 在组件内调用：把 Clerk 的「supabase」模板令牌灌入 Supabase 客户端。
-// 令牌携带 role=authenticated + sub=Clerk 用户 ID，RLS 据此放行并隔离。
-// 返回 ready 标记，页面应等 ready 为 true 后再读写，避免令牌未就绪。
+// 页面调用：拿到 ready 标记，等 Clerk 就绪且已登录后再读写。
 export function useAuthedSupabase() {
-  const { userId, getToken, isLoaded } = useAuth()
-  const [ready, setReady] = useState(false)
-
-  useEffect(() => {
-    if (!isLoaded || !userId) {
-      setReady(false)
-      return
-    }
-    getToken({ template: 'supabase' }).then((token) => {
-      supabase.auth
-        .setSession({ access_token: token, refresh_token: '' })
-        .then(() => setReady(true))
-    })
-  }, [isLoaded, userId, getToken])
-
-  return { supabase, ready }
+  const { userId, isLoaded } = useAuth()
+  return { supabase, ready: isLoaded && !!userId }
 }
