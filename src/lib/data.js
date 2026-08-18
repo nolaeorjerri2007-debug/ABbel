@@ -46,3 +46,14 @@ export async function createGeneration({ input_text, output_draft, scores, templ
   if (error) throw error
   return data
 }
+
+// ============ 账户档案 ============
+
+// 把 Clerk 档案（email/display_name）同步进 users 表（security definer 只改这两个字段）
+export async function syncMyProfile({ email, display_name }) {
+  const { error } = await supabase.rpc('sync_my_profile', {
+    p_email: email,
+    p_display_name: display_name,
+  })
+  if (error) throw error
+}

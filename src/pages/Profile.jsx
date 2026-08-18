@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useUser } from '@clerk/clerk-react';
 import { useAuthedSupabase } from '../lib/supabase';
 import { listTemplates, deleteTemplate, listGenerations } from '../lib/data';
 
 function Profile() {
   const navigate = useNavigate();
   const { ready } = useAuthedSupabase();
+  const { user } = useUser();
   const [activeMenu, setActiveMenu] = useState('我的');
   const [savedTemplates, setSavedTemplates] = useState([]);
   const [generations, setGenerations] = useState([]);
@@ -19,17 +21,15 @@ function Profile() {
   };
 
   useEffect(() => {
-    const localCount = localStorage.getItem('abbel_usage_count');
-    if (localCount) setUsageCount(parseInt(localCount, 10));
-  }, []);
-
-  useEffect(() => {
     if (!ready) return
     listTemplates()
       .then(setSavedTemplates)
       .catch((e) => console.error('模板加载失败', e))
     listGenerations()
-      .then(setGenerations)
+      .then((rows) => {
+        setGenerations(rows)
+        setUsageCount(rows.length)
+      })
       .catch((e) => console.error('历史加载失败', e))
   }, [ready]);
 
@@ -113,8 +113,8 @@ function Profile() {
                   <circle cx="12" cy="7" r="4"/>
                 </svg>
               </div>
-              <div style={{ fontSize: '16px', fontWeight: 900, color: 'var(--color-text-title)', letterSpacing: '1px' }}>OPERATOR_01</div>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--color-text-secondary)', marginTop: '4px' }}>ID: 88A4-9B2C</div>
+              <div style={{ fontSize: '16px', fontWeight: 900, color: 'var(--color-text-title)', letterSpacing: '1px' }}>{user?.fullName || user?.username || user?.primaryEmailAddress?.emailAddress?.split('@')[0] || 'OPERATOR'}</div>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--color-text-secondary)', marginTop: '4px' }}>{user?.primaryEmailAddress?.emailAddress || ''}</div>
             </div>
 
             <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', fontWeight: 700, color: 'var(--color-text-secondary)', letterSpacing: '0.1em', marginBottom: '16px' }}>[QUOTA / 资源配额]</div>

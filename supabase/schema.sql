@@ -114,3 +114,22 @@ grant select on public.users to authenticated;
 grant select, insert, update, delete on public.templates to authenticated;
 grant select, insert, update, delete on public.generations to authenticated;
 grant execute on function public.requesting_user_id() to authenticated, anon;
+
+-- =============================================================
+-- 8. 档案同步：前端调用，只允许更新 email/display_name（无法改 plan）
+-- =============================================================
+create or replace function public.sync_my_profile(p_email text, p_display_name text)
+returns void
+language sql
+security definer
+set search_path = public
+as $$
+  insert into public.users (id, email, display_name)
+  values (public.requesting_user_id(), p_email, p_display_name)
+  on conflict (id) do update
+    set email = excluded.email,
+        display_name = excluded.display_name,
+        updated_at = now();
+$$;
+
+grant execute on function public.sync_my_profile(text, text) to authenticated;
