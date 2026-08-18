@@ -14,6 +14,7 @@ function Profile() {
   const [usageCount, setUsageCount] = useState(127);
   const [toastMsg, setToastMsg] = useState(null);
   const [toastType, setToastType] = useState('success');
+  const [viewGen, setViewGen] = useState(null);
 
   const showToast = (msg, type = 'success') => {
     setToastMsg(msg); setToastType(type);
@@ -49,6 +50,11 @@ function Profile() {
     navigator.clipboard.writeText(fingerprint).then(() => {
       showToast(`已复制 [${template.name}] 的调参指纹，请前往工作台粘贴！`);
     }).catch(() => showToast('复制失败', 'error'));
+  };
+
+  const handleRegenerate = (gen) => {
+    sessionStorage.setItem('userInput', gen.input_text || gen.output_draft || '');
+    navigate('/workspace');
   };
 
   const handleMenuClick = (item) => {
@@ -283,7 +289,7 @@ function Profile() {
                       <div style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--color-text-secondary)' }}>{new Date(gen.created_at).toLocaleString('zh-CN')}</div>
                       <div style={{ fontSize: '12px', fontWeight: 500, color: 'var(--color-text-secondary)' }}>{gen.template_id ? '[ 专属模板 ]' : '[ 无 / 自定义微调 ]'}</div>
                       <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-                        <button onClick={() => showToast('历史详情将在后续版本开放', 'error')} style={{
+                        <button onClick={() => setViewGen(gen)} style={{
                           whiteSpace: 'nowrap',
                           background: 'transparent', border: 'none', fontSize: '13px', fontWeight: 600,
                           color: 'var(--color-text-secondary)', cursor: 'pointer',
@@ -295,7 +301,7 @@ function Profile() {
                           </svg>
                           查看
                         </button>
-                        <button onClick={() => showToast('历史详情将在后续版本开放', 'error')} style={{
+                        <button onClick={() => handleRegenerate(gen)} style={{
                           whiteSpace: 'nowrap',
                           background: 'transparent', border: 'none', fontSize: '13px', fontWeight: 600,
                           color: 'var(--color-text-secondary)', cursor: 'pointer',
@@ -318,6 +324,24 @@ function Profile() {
         </div>
 
       </div>
+
+      {viewGen && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setViewGen(null)}>
+          <div className="glass-module" style={{ width: '720px', maxWidth: '90vw', maxHeight: '80vh', padding: '24px', overflowY: 'auto' }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <div style={{ fontSize: '16px', fontWeight: 900, color: 'var(--color-text-title)' }}>生成详情</div>
+              <button onClick={() => setViewGen(null)} style={{ background: 'transparent', border: 'none', fontSize: '24px', lineHeight: 1, cursor: 'pointer', color: 'var(--color-text-secondary)' }}>×</button>
+            </div>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--color-text-secondary)', marginBottom: '16px' }}>{new Date(viewGen.created_at).toLocaleString('zh-CN')}</div>
+
+            <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: '8px' }}>输入指令</div>
+            <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: '13px', color: 'var(--color-text-secondary)', background: 'rgba(0,0,0,0.08)', padding: '12px', borderRadius: '6px', marginBottom: '16px' }}>{viewGen.input_text || '（无）'}</div>
+
+            <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: '8px' }}>输出文案</div>
+            <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: '14px', color: 'var(--color-text-primary)', background: 'rgba(0,0,0,0.08)', padding: '16px', borderRadius: '6px', lineHeight: '1.7' }}>{viewGen.output_draft || '（无）'}</div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
