@@ -1,11 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '@clerk/clerk-react';
+import { useAuthedSupabase } from '../lib/supabase';
+import { listGenerations } from '../lib/data';
 import './Settings.css';
 
 function Settings() {
   const navigate = useNavigate();
   const { user } = useUser();
+  const { ready } = useAuthedSupabase();
   const displayName = user?.fullName || user?.username || user?.primaryEmailAddress?.emailAddress?.split('@')[0] || 'OPERATOR';
   const email = user?.primaryEmailAddress?.emailAddress || '';
   const [activeMenu, setActiveMenu] = useState('设置');
@@ -22,9 +25,11 @@ function Settings() {
   };
 
   useEffect(() => {
-    const localCount = localStorage.getItem('abbel_usage_count');
-    if (localCount) setUsageCount(parseInt(localCount, 10));
-  }, []);
+    if (!ready) return
+    listGenerations()
+      .then((rows) => setUsageCount(rows.length))
+      .catch((e) => console.error('历史加载失败', e))
+  }, [ready]);
 
   const handleMenuClick = (item) => {
     setActiveMenu(item);
