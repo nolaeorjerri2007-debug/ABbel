@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '@clerk/clerk-react'
 import { useNavigate } from 'react-router-dom'
 import ExportModal from './ExportModal'
+import { useAuthedSupabase } from '../lib/supabase'
+import { listTemplates, createTemplate, createGeneration } from '../lib/data'
 
 const SLIDER_CONFIG = [
   {
@@ -36,6 +38,7 @@ const ADVANCED_SLIDERS = [
 function Workspace() {
   const { getToken } = useAuth()
   const navigate = useNavigate()
+  const { ready } = useAuthedSupabase()
 
   const [draft, setDraft] = useState('')
   const [scores, setScores] = useState({})
@@ -67,11 +70,13 @@ function Workspace() {
   const slotMenuRef = useRef(null);
 
   useEffect(() => {
-    // 读取本地记忆槽
-    const localData = localStorage.getItem('abbel_templates');
-    if (localData) {
-      try { setSavedTemplates(JSON.parse(localData)); } catch(e){}
-    }
+    if (!ready) return
+    listTemplates()
+      .then(setSavedTemplates)
+      .catch((e) => console.error('模板加载失败', e))
+  }, [ready])
+
+  useEffect(() => {
     // 点击外部关闭悬浮菜单
     const handleClickOutside = (e) => {
       if (slotMenuRef.current && !slotMenuRef.current.contains(e.target)) {
@@ -200,6 +205,7 @@ function Workspace() {
 
       if (finalDiffText) {
         const melted = meltDiffToDraft(finalDiffText);
+        const inputBefore = currentDraftRef.current;
 
         setDiffDraft(finalDiffText);
         setDraft(melted);
@@ -214,6 +220,12 @@ function Workspace() {
             scores: { ...baseScoresRef.current }
           }
         ]);
+
+        createGeneration({
+          input_text: inputBefore,
+          output_draft: melted,
+          scores: { ...baseScoresRef.current },
+        }).catch((e) => console.error('历史写入失败', e));
 
         return finalDiffText;
       } else {
@@ -466,6 +478,12 @@ function Workspace() {
             scores: mappedScores
           }
         ]);
+
+        createGeneration({
+          input_text: query,
+          output_draft: finalDraft,
+          scores: mappedScores,
+        }).catch((e) => console.error('历史写入失败', e));
       }
     } catch (err) {
       console.error('Fetch Error:', err);
@@ -616,7 +634,7 @@ function Workspace() {
   // ===================================================
 
   // ================= 记忆槽：存入模板 =================
-  const handleSaveTemplate = () => {
+  const handleSaveTemplate = async () => {
     const tplName = window.prompt('请输入专属模板名称 (例如：硬核说理风)：');
     if (!tplName || !tplName.trim()) return;
 
@@ -632,23 +650,25 @@ function Workspace() {
       return;
     }
 
-    const newTemplate = {
-      id: Date.now().toString(),
-      name: cleanName,
-      scores: { ...scores } // 深度克隆当前所有维度的参数
-    };
+    if (!ready) {
+      showToast('连接准备中，请稍后再试', 'error');
+      return;
+    }
 
-    // 读取旧数据并追加新数据
-    const existingData = localStorage.getItem('abbel_templates');
-    const templates = existingData ? JSON.parse(existingData) : [];
-    templates.push(newTemplate);
+    const newTemplate = { name: cleanName, scores: { ...scores } };
 
-    localStorage.setItem('abbel_templates', JSON.stringify(templates));
-    showToast(`已保存专属模板: ${cleanName}`, 'success'); // ⚠️ 标记为成功
-    
-    // 保存后自动复制指纹，方便分享
-    const fingerprint = `ABBEL_PRESET:${JSON.stringify(newTemplate.scores)}`;
-    navigator.clipboard.writeText(fingerprint).catch(() => {});
+    try {
+      const created = await createTemplate(newTemplate);
+      setSavedTemplates(prev => [created, ...prev]);
+      showToast(`已保存专属模板: ${cleanName}`, 'success');
+
+      // 保存后自动复制指纹，方便分享
+      const fingerprint = `ABBEL_PRESET:${JSON.stringify(created.scores)}`;
+      navigator.clipboard.writeText(fingerprint).catch(() => {});
+    } catch (e) {
+      console.error('保存模板失败', e);
+      showToast('保存失败，请稍后重试', 'error');
+    }
   };
   // ===================================================
 

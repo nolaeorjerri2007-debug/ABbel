@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import logo from '../assets/logo2.0.png'
 // 👉 新增：引入 Clerk 的 UserButton 组件
 import { UserButton } from '@clerk/clerk-react'
+import { useAuthedSupabase } from '../lib/supabase'
+import { listTemplates } from '../lib/data'
 
 const SUGGESTION_CHIPS = [
   '💄 变身小红书爆文',
@@ -18,6 +20,7 @@ const MAX_REQUIREMENT = 200
 
 function Home() {
   const navigate = useNavigate()
+  const { ready } = useAuthedSupabase()
   const [originalText, setOriginalText] = useState('')
   const [requirement, setRequirement] = useState('')
   const [activeMenu, setActiveMenu] = useState('首页')
@@ -30,16 +33,13 @@ function Home() {
   const [usageCount, setUsageCount] = useState(127);
 
   useEffect(() => {
-    // 读取本地记忆槽模板
-    const localData = localStorage.getItem('abbel_templates');
-    if (localData) {
-      try {
-        setSavedTemplates(JSON.parse(localData));
-      } catch (e) {
-        console.error('模板解析失败', e);
-      }
-    }
+    if (!ready) return
+    listTemplates()
+      .then(setSavedTemplates)
+      .catch((e) => console.error('模板加载失败', e))
+  }, [ready])
 
+  useEffect(() => {
     // ⚠️ 新增：读取本地使用次数
     const localCount = localStorage.getItem('abbel_usage_count');
     if (localCount) {

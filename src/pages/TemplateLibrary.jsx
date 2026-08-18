@@ -1,5 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuthedSupabase } from '../lib/supabase';
+import { createTemplate } from '../lib/data';
 
 const TEMPLATES = [
   {
@@ -46,6 +48,7 @@ function formatUsage(count) {
 
 function TemplateLibrary() {
   const navigate = useNavigate();
+  const { ready } = useAuthedSupabase();
   const [activeMenu, setActiveMenu] = useState('模板库');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortType, setSortType] = useState('hot');
@@ -122,19 +125,18 @@ function TemplateLibrary() {
     return result;
   }, [searchQuery, sortType, activeFilters]);
 
-  const handleCollectTemplate = (template) => {
-    const newTemplate = {
-      id: Date.now().toString(),
-      name: template.title,
-      scores: template.scores
-    };
-
-    const existingData = localStorage.getItem('abbel_templates');
-    const templates = existingData ? JSON.parse(existingData) : [];
-    templates.push(newTemplate);
-
-    localStorage.setItem('abbel_templates', JSON.stringify(templates));
-    showToast(`已将 [${template.title}] 配置添加至您的记忆槽！`);
+  const handleCollectTemplate = async (template) => {
+    if (!ready) {
+      showToast('连接准备中，请稍后再试', 'error');
+      return;
+    }
+    try {
+      await createTemplate({ name: template.title, scores: template.scores });
+      showToast(`已将 [${template.title}] 配置添加至您的记忆槽！`);
+    } catch (e) {
+      console.error('收藏模板失败', e);
+      showToast('收藏失败，请稍后重试', 'error');
+    }
   };
 
   const handleCopyFingerprint = (template) => {

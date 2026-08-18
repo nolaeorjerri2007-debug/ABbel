@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuthedSupabase } from '../lib/supabase';
+import { listTemplates, deleteTemplate, listGenerations } from '../lib/data';
 
 function Profile() {
   const navigate = useNavigate();
+  const { ready } = useAuthedSupabase();
   const [activeMenu, setActiveMenu] = useState('我的');
   const [savedTemplates, setSavedTemplates] = useState([]);
+  const [generations, setGenerations] = useState([]);
   const [usageCount, setUsageCount] = useState(127);
   const [toastMsg, setToastMsg] = useState(null);
   const [toastType, setToastType] = useState('success');
@@ -15,19 +19,29 @@ function Profile() {
   };
 
   useEffect(() => {
-    const localData = localStorage.getItem('abbel_templates');
-    if (localData) {
-      try { setSavedTemplates(JSON.parse(localData)); } catch(e){}
-    }
     const localCount = localStorage.getItem('abbel_usage_count');
     if (localCount) setUsageCount(parseInt(localCount, 10));
   }, []);
 
-  const handleDeleteTemplate = (id) => {
-    const updated = savedTemplates.filter(t => t.id !== id);
-    setSavedTemplates(updated);
-    localStorage.setItem('abbel_templates', JSON.stringify(updated));
-    showToast('已删除该专属模板');
+  useEffect(() => {
+    if (!ready) return
+    listTemplates()
+      .then(setSavedTemplates)
+      .catch((e) => console.error('模板加载失败', e))
+    listGenerations()
+      .then(setGenerations)
+      .catch((e) => console.error('历史加载失败', e))
+  }, [ready]);
+
+  const handleDeleteTemplate = async (id) => {
+    try {
+      await deleteTemplate(id);
+      setSavedTemplates(prev => prev.filter(t => t.id !== id));
+      showToast('已删除该专属模板');
+    } catch (e) {
+      console.error('删除模板失败', e);
+      showToast('删除失败，请稍后重试', 'error');
+    }
   };
 
   const handleReuseTemplate = (template) => {
@@ -196,7 +210,7 @@ function Profile() {
                         {tpl.name}
                       </div>
                       <div style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--color-text-secondary)' }}>
-                        {new Date(parseInt(tpl.id)).toLocaleDateString()}
+                        {new Date(tpl.created_at).toLocaleDateString()}
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <div style={{ display: 'flex', gap: '1px', background: 'rgba(0,0,0,0.05)', padding: '2px', borderRadius: '2px' }}>
@@ -243,155 +257,60 @@ function Profile() {
 
               {/* 历史记录列表 */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {/* 第一行 */}
-                <div style={{
-                  display: 'grid', gridTemplateColumns: '40px 2.5fr 1fr 1.5fr 2fr', alignItems: 'center',
-                  background: 'var(--glass-module)', border: '1px solid rgba(255,255,255,0.4)',
-                  padding: '12px 16px', borderRadius: '8px',
-                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.6), 0 4px 10px rgba(0,0,0,0.03)',
-                  transition: 'all 0.2s'
-                }}>
-                  <div style={{
-                    width: '16px', height: '16px', background: 'rgba(0,0,0,0.05)',
-                    border: '1px solid rgba(0,0,0,0.2)', borderRadius: '3px',
-                    boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.1)', cursor: 'pointer'
-                  }}></div>
-                  <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <svg viewBox="0 0 24 24" style={{ width: '16px', height: '16px', stroke: 'var(--color-text-secondary)', fill: 'none', strokeWidth: 2 }}>
-                      <polyline points="4 7 4 4 20 4 20 7"/>
-                      <line x1="9" y1="20" x2="15" y2="20"/>
-                      <line x1="12" y1="4" x2="12" y2="20"/>
-                    </svg>
-                    <span style={{ fontSize: '13px', color: 'var(--color-text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '200px', fontWeight: 400 }}>给新手妈妈推荐婴儿保湿面霜...</span>
-                  </div>
-                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--color-text-secondary)' }}>10 分钟前</div>
-                  <div style={{ fontSize: '12px', fontWeight: 500 }}>25岁女性种草体</div>
-                  <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-                    <button onClick={() => showToast('MVP阶段：历史记录仅在单次会话的工作台中保留', 'error')} style={{
-                      whiteSpace: 'nowrap',
-                      background: 'transparent', border: 'none', fontSize: '13px', fontWeight: 600,
-                      color: 'var(--color-text-secondary)', cursor: 'pointer',
-                      display: 'flex', alignItems: 'center', gap: '4px', transition: 'all 0.2s'
+                {generations.length === 0 ? (
+                  <div style={{ padding: '32px 0', textAlign: 'center', color: 'var(--color-text-secondary)', fontSize: '13px' }}>暂无生成历史</div>
+                ) : (
+                  generations.map((gen) => (
+                    <div key={gen.id} style={{
+                      display: 'grid', gridTemplateColumns: '40px 2.5fr 1fr 1.5fr 2fr', alignItems: 'center',
+                      background: 'var(--glass-module)', border: '1px solid rgba(255,255,255,0.4)',
+                      padding: '12px 16px', borderRadius: '8px',
+                      boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.6), 0 4px 10px rgba(0,0,0,0.03)',
+                      transition: 'all 0.2s'
                     }}>
-                      <svg viewBox="0 0 24 24" style={{ width: '14px', height: '14px', stroke: 'currentColor', fill: 'none', strokeWidth: 2 }}>
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                        <circle cx="12" cy="12" r="3"/>
-                      </svg>
-                      查看
-                    </button>
-                    <button onClick={() => showToast('MVP阶段：历史记录仅在单次会话的工作台中保留', 'error')} style={{
-                      whiteSpace: 'nowrap',
-                      background: 'transparent', border: 'none', fontSize: '13px', fontWeight: 600,
-                      color: 'var(--color-text-secondary)', cursor: 'pointer',
-                      display: 'flex', alignItems: 'center', gap: '4px', transition: 'all 0.2s'
-                    }}>
-                      <svg viewBox="0 0 24 24" style={{ width: '14px', height: '14px', stroke: 'currentColor', fill: 'none', strokeWidth: 2 }}>
-                        <path d="M5 12h14M12 5l7 7-7 7"/>
-                      </svg>
-                      再来一次
-                    </button>
-                  </div>
-                </div>
-
-                {/* 第二行 */}
-                <div style={{
-                  display: 'grid', gridTemplateColumns: '40px 2.5fr 1fr 1.5fr 2fr', alignItems: 'center',
-                  background: 'var(--glass-module)', border: '1px solid rgba(255,255,255,0.4)',
-                  padding: '12px 16px', borderRadius: '8px',
-                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.6), 0 4px 10px rgba(0,0,0,0.03)',
-                  transition: 'all 0.2s'
-                }}>
-                  <div style={{
-                    width: '16px', height: '16px', background: 'rgba(0,0,0,0.05)',
-                    border: '1px solid rgba(0,0,0,0.2)', borderRadius: '3px',
-                    boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.1)', cursor: 'pointer'
-                  }}></div>
-                  <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <svg viewBox="0 0 24 24" style={{ width: '16px', height: '16px', stroke: 'var(--color-text-secondary)', fill: 'none', strokeWidth: 2 }}>
-                      <polyline points="4 7 4 4 20 4 20 7"/>
-                      <line x1="9" y1="20" x2="15" y2="20"/>
-                      <line x1="12" y1="4" x2="12" y2="20"/>
-                    </svg>
-                    <span style={{ fontSize: '13px', color: 'var(--color-text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '200px', fontWeight: 400 }}>分析 Q2 季度的财报数据表现...</span>
-                  </div>
-                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--color-text-secondary)' }}>昨天 14:30</div>
-                  <div style={{ fontSize: '12px', fontWeight: 500, color: 'var(--color-text-secondary)' }}>[ 无 / 自定义微调 ]</div>
-                  <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-                    <button onClick={() => showToast('MVP阶段：历史记录仅在单次会话的工作台中保留', 'error')} style={{
-                      whiteSpace: 'nowrap',
-                      background: 'transparent', border: 'none', fontSize: '13px', fontWeight: 600,
-                      color: 'var(--color-text-secondary)', cursor: 'pointer',
-                      display: 'flex', alignItems: 'center', gap: '4px', transition: 'all 0.2s'
-                    }}>
-                      <svg viewBox="0 0 24 24" style={{ width: '14px', height: '14px', stroke: 'currentColor', fill: 'none', strokeWidth: 2 }}>
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                        <circle cx="12" cy="12" r="3"/>
-                      </svg>
-                      查看
-                    </button>
-                    <button onClick={() => showToast('MVP阶段：历史记录仅在单次会话的工作台中保留', 'error')} style={{
-                      whiteSpace: 'nowrap',
-                      background: 'transparent', border: 'none', fontSize: '13px', fontWeight: 600,
-                      color: 'var(--color-text-secondary)', cursor: 'pointer',
-                      display: 'flex', alignItems: 'center', gap: '4px', transition: 'all 0.2s'
-                    }}>
-                      <svg viewBox="0 0 24 24" style={{ width: '14px', height: '14px', stroke: 'currentColor', fill: 'none', strokeWidth: 2 }}>
-                        <path d="M5 12h14M12 5l7 7-7 7"/>
-                      </svg>
-                      再来一次
-                    </button>
-                  </div>
-                </div>
-
-                {/* 第三行 */}
-                <div style={{
-                  display: 'grid', gridTemplateColumns: '40px 2.5fr 1fr 1.5fr 2fr', alignItems: 'center',
-                  background: 'var(--glass-module)', border: '1px solid rgba(255,255,255,0.4)',
-                  padding: '12px 16px', borderRadius: '8px',
-                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.6), 0 4px 10px rgba(0,0,0,0.03)',
-                  transition: 'all 0.2s'
-                }}>
-                  <div style={{
-                    width: '16px', height: '16px', background: 'rgba(0,0,0,0.05)',
-                    border: '1px solid rgba(0,0,0,0.2)', borderRadius: '3px',
-                    boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.1)', cursor: 'pointer'
-                  }}></div>
-                  <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <svg viewBox="0 0 24 24" style={{ width: '16px', height: '16px', stroke: 'var(--color-text-secondary)', fill: 'none', strokeWidth: 2 }}>
-                      <polyline points="4 7 4 4 20 4 20 7"/>
-                      <line x1="9" y1="20" x2="15" y2="20"/>
-                      <line x1="12" y1="4" x2="12" y2="20"/>
-                    </svg>
-                    <span style={{ fontSize: '13px', color: 'var(--color-text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '200px', fontWeight: 400 }}>数码博主开箱测评新款降噪耳机...</span>
-                  </div>
-                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--color-text-secondary)' }}>2026-05-13</div>
-                  <div style={{ fontSize: '12px', fontWeight: 500 }}>知乎硬核答</div>
-                  <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-                    <button onClick={() => showToast('MVP阶段：历史记录仅在单次会话的工作台中保留', 'error')} style={{
-                      whiteSpace: 'nowrap',
-                      background: 'transparent', border: 'none', fontSize: '13px', fontWeight: 600,
-                      color: 'var(--color-text-secondary)', cursor: 'pointer',
-                      display: 'flex', alignItems: 'center', gap: '4px', transition: 'all 0.2s'
-                    }}>
-                      <svg viewBox="0 0 24 24" style={{ width: '14px', height: '14px', stroke: 'currentColor', fill: 'none', strokeWidth: 2 }}>
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                        <circle cx="12" cy="12" r="3"/>
-                      </svg>
-                      查看
-                    </button>
-                    <button onClick={() => showToast('MVP阶段：历史记录仅在单次会话的工作台中保留', 'error')} style={{
-                      whiteSpace: 'nowrap',
-                      background: 'transparent', border: 'none', fontSize: '13px', fontWeight: 600,
-                      color: 'var(--color-text-secondary)', cursor: 'pointer',
-                      display: 'flex', alignItems: 'center', gap: '4px', transition: 'all 0.2s'
-                    }}>
-                      <svg viewBox="0 0 24 24" style={{ width: '14px', height: '14px', stroke: 'currentColor', fill: 'none', strokeWidth: 2 }}>
-                        <path d="M5 12h14M12 5l7 7-7 7"/>
-                      </svg>
-                      再来一次
-                    </button>
-                  </div>
-                </div>
+                      <div style={{
+                        width: '16px', height: '16px', background: 'rgba(0,0,0,0.05)',
+                        border: '1px solid rgba(0,0,0,0.2)', borderRadius: '3px',
+                        boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.1)', cursor: 'pointer'
+                      }}></div>
+                      <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <svg viewBox="0 0 24 24" style={{ width: '16px', height: '16px', stroke: 'var(--color-text-secondary)', fill: 'none', strokeWidth: 2 }}>
+                          <polyline points="4 7 4 4 20 4 20 7"/>
+                          <line x1="9" y1="20" x2="15" y2="20"/>
+                          <line x1="12" y1="4" x2="12" y2="20"/>
+                        </svg>
+                        <span style={{ fontSize: '13px', color: 'var(--color-text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '200px', fontWeight: 400 }}>{gen.input_text || gen.output_draft || ''}</span>
+                      </div>
+                      <div style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--color-text-secondary)' }}>{new Date(gen.created_at).toLocaleString('zh-CN')}</div>
+                      <div style={{ fontSize: '12px', fontWeight: 500, color: 'var(--color-text-secondary)' }}>{gen.template_id ? '[ 专属模板 ]' : '[ 无 / 自定义微调 ]'}</div>
+                      <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                        <button onClick={() => showToast('历史详情将在后续版本开放', 'error')} style={{
+                          whiteSpace: 'nowrap',
+                          background: 'transparent', border: 'none', fontSize: '13px', fontWeight: 600,
+                          color: 'var(--color-text-secondary)', cursor: 'pointer',
+                          display: 'flex', alignItems: 'center', gap: '4px', transition: 'all 0.2s'
+                        }}>
+                          <svg viewBox="0 0 24 24" style={{ width: '14px', height: '14px', stroke: 'currentColor', fill: 'none', strokeWidth: 2 }}>
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                          </svg>
+                          查看
+                        </button>
+                        <button onClick={() => showToast('历史详情将在后续版本开放', 'error')} style={{
+                          whiteSpace: 'nowrap',
+                          background: 'transparent', border: 'none', fontSize: '13px', fontWeight: 600,
+                          color: 'var(--color-text-secondary)', cursor: 'pointer',
+                          display: 'flex', alignItems: 'center', gap: '4px', transition: 'all 0.2s'
+                        }}>
+                          <svg viewBox="0 0 24 24" style={{ width: '14px', height: '14px', stroke: 'currentColor', fill: 'none', strokeWidth: 2 }}>
+                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                          </svg>
+                          再来一次
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
 
