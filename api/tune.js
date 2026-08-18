@@ -1,6 +1,7 @@
 import { createClient } from 'redis';
 import { verifyToken } from '@clerk/backend';
 import { tuneSchema } from '../lib/schemas.js';
+import { deductQuota } from '../lib/quota.js';
 
 export const maxDuration = 60; // 保持 60 秒续命补丁
 
@@ -47,7 +48,7 @@ export default async function handler(req, res) {
     const payload = parsed.data;
 
     // ==========================================
-    // 4. 连接 Redis 查阅用户资产
+    // 4. 连接 Redis，原子扣费（首次发放 / 余额判断 / 自减 合并为单条 Lua）
     // ==========================================
     // 优先读取环境变量中的 FREE_QUOTA，如果没有配置，则默认给 10 次
     const MAX_FREE_QUOTA = parseInt(process.env.FREE_QUOTA || '10', 10);
@@ -55,26 +56,15 @@ export default async function handler(req, res) {
     const redis = createClient({ url: process.env.REDIS_URL });
     await redis.connect();
 
-    let balance = await redis.get(userId);
+    // 用用户真实 ID 作为 Key，一条 Lua 原子完成「首次发放 / 余额判断 / 自减」
+    const { ok, balance: newBalance } = await deductQuota(redis, userId, MAX_FREE_QUOTA);
 
-    // 新用户首次使用自动赠送初始额度
-    if (balance === null) {
-      balance = MAX_FREE_QUOTA; 
-      await redis.set(userId, balance);
-    } else {
-      balance = parseInt(balance);
-    }
-
-    if (balance <= 0) {
+    // 余额枯竭，未扣费，直接拦截
+    if (ok === 0) {
       await redis.disconnect();
       return res.status(403).json({ error: '您的算力额度已耗尽，请升级 Pro 会员解锁无限算力！' });
     }
 
-    // ==========================================
-    // 4. 额度充足，扣除 1 次并获取最新余额
-    // ==========================================
-    await redis.decr(userId);
-    const newBalance = await redis.get(userId); 
     await redis.disconnect();
 
     // ==========================================
