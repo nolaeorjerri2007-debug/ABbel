@@ -25,7 +25,8 @@ export default async function handler(req, res) {
     try {
       // 1. 直接接收返回值（不需要解构 data）
       verifiedToken = await verifyToken(token, {
-        secretKey: process.env.CLERK_SECRET_KEY
+        secretKey: process.env.CLERK_SECRET_KEY,
+        authorizedParties: ['https://www.abbel.cc', 'https://abbel.cc', 'http://localhost:5173']
       });
     } catch (error) {
       // 2. 如果验证失败，会跳到这里
