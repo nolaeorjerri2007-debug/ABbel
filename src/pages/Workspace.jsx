@@ -620,9 +620,21 @@ function Workspace() {
     const tplName = window.prompt('请输入专属模板名称 (例如：硬核说理风)：');
     if (!tplName || !tplName.trim()) return;
 
+    const cleanName = tplName.trim();
+
+    // 预布防四：模板名只允许常规字符，最大 20 字，屏蔽 <script> 等标签
+    if (cleanName.length > 20) {
+      showToast('模板名称不能超过 20 个字符', 'error');
+      return;
+    }
+    if (/[<>"'&/\\]/.test(cleanName)) {
+      showToast('模板名称包含非法字符（禁止 <> " \' & / \\ 等符号）', 'error');
+      return;
+    }
+
     const newTemplate = {
       id: Date.now().toString(),
-      name: tplName.trim(),
+      name: cleanName,
       scores: { ...scores } // 深度克隆当前所有维度的参数
     };
 
@@ -632,7 +644,7 @@ function Workspace() {
     templates.push(newTemplate);
 
     localStorage.setItem('abbel_templates', JSON.stringify(templates));
-    showToast(`已保存专属模板: ${tplName.trim()}`, 'success'); // ⚠️ 标记为成功
+    showToast(`已保存专属模板: ${cleanName}`, 'success'); // ⚠️ 标记为成功
     
     // 保存后自动复制指纹，方便分享
     const fingerprint = `ABBEL_PRESET:${JSON.stringify(newTemplate.scores)}`;
@@ -931,6 +943,7 @@ function Workspace() {
             <div style={{ padding: '0 24px 16px', display: 'flex', gap: '8px', animation: 'fadeIn 0.2s ease-out', alignItems: 'flex-end' }}>
               <textarea
                 value={appendQuery}
+                maxLength={500}
                 onChange={(e) => {
                   setAppendQuery(e.target.value);
                   e.target.style.height = 'auto';

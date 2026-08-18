@@ -1,13 +1,11 @@
 import { createClient } from 'redis';
 import { verifyToken } from '@clerk/backend';
+import { tuneSchema } from '../lib/schemas.js';
 
 export const maxDuration = 60; // 保持 60 秒续命补丁
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-
-  // 1. 从前端请求中提取调音参数 (彻底移除了旧的 code 提取)
-  const payload = req.body;
 
   try {
     // ==========================================
@@ -37,7 +35,19 @@ export default async function handler(req, res) {
     userId = verifiedToken.sub;
 
     // ==========================================
-    // 3. 连接 Redis 查阅用户资产
+    // 3. Zod 数据契约体检（必须在扣费之前拦截，垃圾数据不扣额度）
+    // ==========================================
+    const parsed = tuneSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({
+        error: '输入参数校验失败',
+        details: parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`)
+      });
+    }
+    const payload = parsed.data;
+
+    // ==========================================
+    // 4. 连接 Redis 查阅用户资产
     // ==========================================
     // 优先读取环境变量中的 FREE_QUOTA，如果没有配置，则默认给 10 次
     const MAX_FREE_QUOTA = parseInt(process.env.FREE_QUOTA || '10', 10);

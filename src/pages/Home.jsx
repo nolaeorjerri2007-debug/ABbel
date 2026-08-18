@@ -11,6 +11,11 @@ const SUGGESTION_CHIPS = [
   '🔥 增强情绪感染力'
 ]
 
+// 纵深防御：后端 zod 已对 input_text 设 max(2600)。
+// 首页前端预算 = 原始文案 800 + 诉求 200 = 1000（+ 包装词 ≈16 仍在 2600 之内）。
+const MAX_ORIGINAL = 800
+const MAX_REQUIREMENT = 200
+
 function Home() {
   const navigate = useNavigate()
   const [originalText, setOriginalText] = useState('')
@@ -186,14 +191,21 @@ function Home() {
     }
     const totalLength = originalText.length + requirement.length
     if (totalLength > 0) {
-      return `TYPING_ ${String(totalLength).padStart(4, '0')} / 2000`
+      return `TYPING_ ${String(totalLength).padStart(4, '0')} / ${MAX_ORIGINAL + MAX_REQUIREMENT}`
     }
-    return 'READY_ 0000 / 2000'
+    return `READY_ 0000 / ${MAX_ORIGINAL + MAX_REQUIREMENT}`
   }
 
   const getStatusColor = () => {
     if (hasError) return '#FF6B3D'
     return '#66FF88'
+  }
+
+  // 逐字段计数：接近上限时变色提醒（≥90% 橙红，其余淡白）
+  const counterColor = (current, max) => {
+    const ratio = max > 0 ? current / max : 0
+    if (ratio >= 0.9) return '#FF6B3D'
+    return 'rgba(255,255,255,0.4)'
   }
 
   return (
@@ -247,8 +259,16 @@ function Home() {
               placeholder="在此粘贴你需要优化的原始文案..."
               value={originalText}
               onChange={handleOriginalTextChange}
+              maxLength={MAX_ORIGINAL}
               style={{ minHeight: '240px', paddingBottom: '40px' }}
             />
+            <div style={{
+              position: 'absolute', top: '10px', right: '18px',
+              fontSize: '11px', fontFamily: 'monospace', letterSpacing: '0.5px',
+              color: counterColor(originalText.length, MAX_ORIGINAL), transition: 'color 0.2s'
+            }}>
+              原始文案 {String(originalText.length).padStart(3, '0')} / {MAX_ORIGINAL}
+            </div>
 
             {/* 底层滑块：未输入时半透明，输入后高亮并可点击上滑 */}
             <div
@@ -273,7 +293,15 @@ function Home() {
                 placeholder="输入修改诉求，例如：改写得更专业、增加悬念..."
                 value={requirement}
                 onChange={handleRequirementChange}
+                maxLength={MAX_REQUIREMENT}
               />
+              <div style={{
+                textAlign: 'right', fontSize: '11px', fontFamily: 'monospace',
+                letterSpacing: '0.5px', marginTop: '6px',
+                color: counterColor(requirement.length, MAX_REQUIREMENT), transition: 'color 0.2s'
+              }}>
+                修改诉求 {String(requirement.length).padStart(3, '0')} / {MAX_REQUIREMENT}
+              </div>
 
               {/* 灵感药丸紧贴输入区 */}
               <div className="chip-tag-container" style={{ marginTop: '0', marginBottom: '16px' }}>
