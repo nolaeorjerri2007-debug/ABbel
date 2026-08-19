@@ -28,23 +28,22 @@ export async function deleteTemplate(id) {
 
 // ============ 生成历史 ============
 
-export async function listGenerations() {
-  const { data, error } = await supabase
+export async function listGenerationsPage({ from = 0, to = 19 } = {}) {
+  const { data, count, error } = await supabase
     .from('generations')
-    .select('*')
+    .select('*', { count: 'exact' })
     .order('created_at', { ascending: false })
+    .range(from, to)
   if (error) throw error
-  return data
+  return { rows: data ?? [], count: count ?? 0 }
 }
 
-export async function createGeneration({ input_text, output_draft, scores, template_id = null }) {
-  const { data, error } = await supabase
+export async function countGenerations() {
+  const { count, error } = await supabase
     .from('generations')
-    .insert({ input_text, output_draft, scores, template_id })
-    .select()
-    .single()
+    .select('id', { count: 'exact', head: true })
   if (error) throw error
-  return data
+  return count ?? 0
 }
 
 export async function deleteGeneration(id) {

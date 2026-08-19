@@ -2,6 +2,7 @@ import { createClient } from 'redis';
 import { verifyToken } from '@clerk/backend';
 import { tuneSchema } from '../lib/schemas.js';
 import { deductQuota } from '../lib/quota.js';
+import { persistGeneration } from '../lib/generations.js';
 
 export const maxDuration = 60; // 保持 60 秒续命补丁
 
@@ -81,7 +82,16 @@ export default async function handler(req, res) {
     
     const data = await response.json();
     
-    // 6. 将 Dify 的结果和最新余额一起返回
+    // 6. 扣费已成功、Dify 已返回 → 落库沉淀（失败不阻断返回）
+    await persistGeneration({
+      userId,
+      mode: 'tune',
+      inputText: payload.inputs.original_text,
+      difyData: data,
+      tunePayload: payload,
+    });
+
+    // 7. 将 Dify 的结果和最新余额一起返回
     res.status(200).json({ ...data, remaining_balance: newBalance });
 
   } catch (error) {

@@ -50,6 +50,8 @@ create table public.generations (
   user_id      text not null default public.requesting_user_id() references public.users(id) on delete cascade,
   input_text   text,
   output_draft text,
+  title        text,
+  subtitle     text,
   scores       jsonb,                       -- 生成时的 10 维参数快照
   template_id  bigint references public.templates(id) on delete set null,
   created_at   timestamptz not null default now()

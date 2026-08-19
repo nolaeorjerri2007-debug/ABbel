@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '@clerk/clerk-react';
 import { useAuthedSupabase } from '../lib/supabase';
-import { listGenerations } from '../lib/data';
+import { countGenerations } from '../lib/data';
 import './Settings.css';
 
 function Settings() {
@@ -26,8 +26,8 @@ function Settings() {
 
   useEffect(() => {
     if (!ready) return
-    listGenerations()
-      .then((rows) => setUsageCount(rows.length))
+    countGenerations()
+      .then(setUsageCount)
       .catch((e) => console.error('历史加载失败', e))
   }, [ready]);
 

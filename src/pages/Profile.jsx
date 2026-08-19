@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '@clerk/clerk-react';
 import { useAuthedSupabase } from '../lib/supabase';
-import { listTemplates, deleteTemplate, listGenerations, deleteGeneration } from '../lib/data';
+import { listTemplates, deleteTemplate, listGenerationsPage, deleteGeneration } from '../lib/data';
+
+const PAGE_SIZE = 20;
 
 function Profile() {
   const navigate = useNavigate();
@@ -15,10 +17,33 @@ function Profile() {
   const [toastMsg, setToastMsg] = useState(null);
   const [toastType, setToastType] = useState('success');
   const [viewGen, setViewGen] = useState(null);
+  const [generationPage, setGenerationPage] = useState(1);
+  const [generationTotal, setGenerationTotal] = useState(0);
 
   const showToast = (msg, type = 'success') => {
     setToastMsg(msg); setToastType(type);
     setTimeout(() => setToastMsg(null), 3000);
+  };
+
+  const loadGenerations = async (page) => {
+    if (!ready) return;
+    try {
+      const from = (page - 1) * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
+      const { rows, count } = await listGenerationsPage({ from, to });
+      setGenerations(rows);
+      setGenerationTotal(count);
+      setUsageCount(count);
+    } catch (e) {
+      console.error('历史加载失败', e);
+    }
+  };
+
+  const changeGenerationPage = (page) => {
+    const lastPage = Math.max(1, Math.ceil(generationTotal / PAGE_SIZE));
+    if (page < 1 || page > lastPage) return;
+    setGenerationPage(page);
+    loadGenerations(page);
   };
 
   useEffect(() => {
@@ -26,12 +51,7 @@ function Profile() {
     listTemplates()
       .then(setSavedTemplates)
       .catch((e) => console.error('模板加载失败', e))
-    listGenerations()
-      .then((rows) => {
-        setGenerations(rows)
-        setUsageCount(rows.length)
-      })
-      .catch((e) => console.error('历史加载失败', e))
+    loadGenerations(1)
   }, [ready]);
 
   const handleDeleteTemplate = async (id) => {
@@ -48,8 +68,11 @@ function Profile() {
   const handleDeleteGeneration = async (id) => {
     try {
       await deleteGeneration(id);
-      setGenerations(prev => prev.filter(g => g.id !== id));
-      setUsageCount(prev => Math.max(0, prev - 1));
+      const remaining = Math.max(0, generationTotal - 1);
+      const lastPage = Math.max(1, Math.ceil(remaining / PAGE_SIZE));
+      const nextPage = generationPage > lastPage ? lastPage : generationPage;
+      setGenerationPage(nextPage);
+      await loadGenerations(nextPage);
       showToast('已删除该生成记录');
     } catch (e) {
       console.error('删除历史失败', e);
@@ -296,7 +319,7 @@ function Profile() {
                           <line x1="9" y1="20" x2="15" y2="20"/>
                           <line x1="12" y1="4" x2="12" y2="20"/>
                         </svg>
-                        <span style={{ fontSize: '13px', color: 'var(--color-text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '200px', fontWeight: 400 }}>{gen.input_text || gen.output_draft || ''}</span>
+                        <span style={{ fontSize: '13px', color: 'var(--color-text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '200px', fontWeight: 400 }}>{gen.title || gen.input_text || gen.output_draft || ''}</span>
                       </div>
                       <div style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--color-text-secondary)' }}>{new Date(gen.created_at).toLocaleString('zh-CN')}</div>
                       <div style={{ fontSize: '12px', fontWeight: 500, color: 'var(--color-text-secondary)' }}>{gen.template_id ? '[ 专属模板 ]' : '[ 无 / 自定义微调 ]'}</div>
@@ -338,6 +361,28 @@ function Profile() {
                   ))
                 )}
               </div>
+
+              {generationTotal > PAGE_SIZE && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px', paddingTop: '12px', borderTop: '1px dashed rgba(0,0,0,0.15)' }}>
+                  <button
+                    onClick={() => changeGenerationPage(generationPage - 1)}
+                    disabled={generationPage <= 1}
+                    style={{ background: 'transparent', border: '1px solid rgba(0,0,0,0.15)', borderRadius: '4px', padding: '4px 12px', fontSize: '12px', fontWeight: 600, color: generationPage <= 1 ? 'rgba(0,0,0,0.3)' : 'var(--color-text-primary)', cursor: generationPage <= 1 ? 'not-allowed' : 'pointer' }}
+                  >
+                    上一页
+                  </button>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--color-text-secondary)' }}>
+                    第 {generationPage} / {Math.max(1, Math.ceil(generationTotal / PAGE_SIZE))} 页 · 共 {generationTotal} 条
+                  </span>
+                  <button
+                    onClick={() => changeGenerationPage(generationPage + 1)}
+                    disabled={generationPage >= Math.ceil(generationTotal / PAGE_SIZE)}
+                    style={{ background: 'transparent', border: '1px solid rgba(0,0,0,0.15)', borderRadius: '4px', padding: '4px 12px', fontSize: '12px', fontWeight: 600, color: generationPage >= Math.ceil(generationTotal / PAGE_SIZE) ? 'rgba(0,0,0,0.3)' : 'var(--color-text-primary)', cursor: generationPage >= Math.ceil(generationTotal / PAGE_SIZE) ? 'not-allowed' : 'pointer' }}
+                  >
+                    下一页
+                  </button>
+                </div>
+              )}
             </div>
 
           </div>

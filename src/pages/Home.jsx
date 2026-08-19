@@ -4,7 +4,7 @@ import logo from '../assets/logo2.0.png'
 // 👉 新增：引入 Clerk 的 UserButton 组件
 import { UserButton } from '@clerk/clerk-react'
 import { useAuthedSupabase } from '../lib/supabase'
-import { listTemplates, listGenerations } from '../lib/data'
+import { listTemplates, countGenerations } from '../lib/data'
 
 const SUGGESTION_CHIPS = [
   '💄 变身小红书爆文',
@@ -37,8 +37,8 @@ function Home() {
     listTemplates()
       .then(setSavedTemplates)
       .catch((e) => console.error('模板加载失败', e))
-    listGenerations()
-      .then((rows) => setUsageCount(rows.length))
+    countGenerations()
+      .then(setUsageCount)
       .catch((e) => console.error('生成历史加载失败', e))
   }, [ready])
 

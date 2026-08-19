@@ -3,7 +3,7 @@ import { useAuth } from '@clerk/clerk-react'
 import { useNavigate } from 'react-router-dom'
 import ExportModal from './ExportModal'
 import { useAuthedSupabase } from '../lib/supabase'
-import { listTemplates, createTemplate, createGeneration } from '../lib/data'
+import { listTemplates, createTemplate } from '../lib/data'
 
 const SLIDER_CONFIG = [
   {
@@ -205,7 +205,6 @@ function Workspace() {
 
       if (finalDiffText) {
         const melted = meltDiffToDraft(finalDiffText);
-        const inputBefore = currentDraftRef.current;
 
         setDiffDraft(finalDiffText);
         setDraft(melted);
@@ -220,12 +219,6 @@ function Workspace() {
             scores: { ...baseScoresRef.current }
           }
         ]);
-
-        createGeneration({
-          input_text: inputBefore,
-          output_draft: melted,
-          scores: { ...baseScoresRef.current },
-        }).catch((e) => console.error('历史写入失败', e));
 
         return finalDiffText;
       } else {
@@ -478,12 +471,6 @@ function Workspace() {
             scores: mappedScores
           }
         ]);
-
-        createGeneration({
-          input_text: query,
-          output_draft: finalDraft,
-          scores: mappedScores,
-        }).catch((e) => console.error('历史写入失败', e));
       }
     } catch (err) {
       console.error('Fetch Error:', err);
