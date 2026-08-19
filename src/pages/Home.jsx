@@ -4,7 +4,7 @@ import logo from '../assets/logo2.0.png'
 // 👉 新增：引入 Clerk 的 UserButton 组件
 import { UserButton } from '@clerk/clerk-react'
 import { useAuthedSupabase } from '../lib/supabase'
-import { listTemplates } from '../lib/data'
+import { listTemplates, listGenerations } from '../lib/data'
 
 const SUGGESTION_CHIPS = [
   '💄 变身小红书爆文',
@@ -30,24 +30,19 @@ function Home() {
   const intentInputRef = useRef(null)
   const errorTimerRef = useRef(null)
   const [savedTemplates, setSavedTemplates] = useState([]);
-  const [usageCount, setUsageCount] = useState(127);
+  const [usageCount, setUsageCount] = useState(0);
 
   useEffect(() => {
     if (!ready) return
     listTemplates()
       .then(setSavedTemplates)
       .catch((e) => console.error('模板加载失败', e))
+    listGenerations()
+      .then((rows) => setUsageCount(rows.length))
+      .catch((e) => console.error('生成历史加载失败', e))
   }, [ready])
 
   useEffect(() => {
-    // ⚠️ 新增：读取本地使用次数
-    const localCount = localStorage.getItem('abbel_usage_count');
-    if (localCount) {
-      setUsageCount(parseInt(localCount, 10));
-    } else {
-      localStorage.setItem('abbel_usage_count', '127');
-    }
-
     // ================= ⚠️ 新增：双轨智能接站逻辑 =================
     const pendingInstruction = sessionStorage.getItem('pending_instruction');
     if (pendingInstruction) {
@@ -75,15 +70,6 @@ function Home() {
       }
     }
   }, [])
-
-  // 辅助函数：发车时递增使用次数
-  const recordUsage = () => {
-    setUsageCount(prev => {
-      const newCount = prev + 1;
-      localStorage.setItem('abbel_usage_count', newCount.toString());
-      return newCount;
-    });
-  };
 
   const handleOriginalTextChange = (e) => {
     setOriginalText(e.target.value)
@@ -124,7 +110,6 @@ function Home() {
     }
 
     const combinedQuery = `【原始文案】\n${originalText.trim()}\n\n【修改诉求】\n${requirement.trim()}`
-    recordUsage(); // ⚠️ 新增：记录使用次数
     sessionStorage.setItem('userInput', combinedQuery)
     navigate('/workspace')
   }
@@ -155,7 +140,6 @@ function Home() {
     const combinedQuery = `【原始文案】\n${originalText.trim()}\n\n【风格重构指令】\n${instruction}`;
 
     // 3. 瞬间存入 session 并飞往工作台
-    recordUsage(); // ⚠️ 新增：记录使用次数
     sessionStorage.setItem('userInput', combinedQuery);
     navigate('/workspace');
   };
@@ -173,7 +157,6 @@ function Home() {
 
     const combinedQuery = `【原始文案】\n${originalText.trim()}\n\n【系统指令】\n请严格按照以下我设定的专属调音台参数，对文案进行深度重构（要求严格体现参数倾向）：\n${paramStr}`;
 
-    recordUsage(); // ⚠️ 新增：记录使用次数
     sessionStorage.setItem('userInput', combinedQuery);
     navigate('/workspace');
   };
