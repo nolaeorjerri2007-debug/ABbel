@@ -47,6 +47,11 @@ export async function createGeneration({ input_text, output_draft, scores, templ
   return data
 }
 
+export async function deleteGeneration(id) {
+  const { error } = await supabase.from('generations').delete().eq('id', id)
+  if (error) throw error
+}
+
 // ============ 账户档案 ============
 
 // 把 Clerk 档案（email/display_name）同步进 users 表（security definer 只改这两个字段）

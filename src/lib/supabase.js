@@ -19,8 +19,11 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   global: {
     fetch: async (url, options = {}) => {
       const token = await window.Clerk?.session?.getToken({ template: 'supabase' })
+      if (!token) {
+        throw new Error('Supabase 鉴权令牌缺失：Clerk 未就绪或用户未登录')
+      }
       const headers = new Headers(options?.headers)
-      if (token) headers.set('Authorization', `Bearer ${token}`)
+      headers.set('Authorization', `Bearer ${token}`)
       return fetch(url, { ...options, headers })
     },
   },

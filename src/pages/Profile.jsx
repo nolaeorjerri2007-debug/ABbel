@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '@clerk/clerk-react';
 import { useAuthedSupabase } from '../lib/supabase';
-import { listTemplates, deleteTemplate, listGenerations } from '../lib/data';
+import { listTemplates, deleteTemplate, listGenerations, deleteGeneration } from '../lib/data';
 
 function Profile() {
   const navigate = useNavigate();
@@ -41,6 +41,18 @@ function Profile() {
       showToast('已删除该专属模板');
     } catch (e) {
       console.error('删除模板失败', e);
+      showToast('删除失败，请稍后重试', 'error');
+    }
+  };
+
+  const handleDeleteGeneration = async (id) => {
+    try {
+      await deleteGeneration(id);
+      setGenerations(prev => prev.filter(g => g.id !== id));
+      setUsageCount(prev => Math.max(0, prev - 1));
+      showToast('已删除该生成记录');
+    } catch (e) {
+      console.error('删除历史失败', e);
       showToast('删除失败，请稍后重试', 'error');
     }
   };
@@ -311,6 +323,15 @@ function Profile() {
                             <path d="M5 12h14M12 5l7 7-7 7"/>
                           </svg>
                           再来一次
+                        </button>
+                        <button onClick={() => handleDeleteGeneration(gen.id)} style={{
+                          whiteSpace: 'nowrap',
+                          background: 'transparent', border: 'none', fontSize: '13px', fontWeight: 600,
+                          color: 'var(--color-text-secondary)', cursor: 'pointer',
+                          display: 'flex', alignItems: 'center', gap: '4px', transition: 'all 0.2s'
+                        }}>
+                          <svg viewBox="0 0 24 24" style={{ width: '14px', height: '14px', stroke: 'currentColor', fill: 'none', strokeWidth: 2 }}><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                          删除
                         </button>
                       </div>
                     </div>
