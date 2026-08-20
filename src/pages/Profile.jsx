@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useUser } from '@clerk/clerk-react';
 import { useAuthedSupabase } from '../lib/supabase';
 import { listTemplates, deleteTemplate, listGenerationsPage, deleteGeneration } from '../lib/data';
+import { useQuota } from '../lib/quota-context';
 
 const PAGE_SIZE = 20;
 
@@ -10,6 +11,7 @@ function Profile() {
   const navigate = useNavigate();
   const { ready } = useAuthedSupabase();
   const { user } = useUser();
+  const { slotLimit } = useQuota();
   const [activeMenu, setActiveMenu] = useState('我的');
   const [savedTemplates, setSavedTemplates] = useState([]);
   const [generations, setGenerations] = useState([]);
@@ -36,6 +38,7 @@ function Profile() {
       setUsageCount(count);
     } catch (e) {
       console.error('历史加载失败', e);
+      showToast('云端连接超时，请稍后重试', 'error');
     }
   };
 
@@ -50,7 +53,10 @@ function Profile() {
     if (!ready) return
     listTemplates()
       .then(setSavedTemplates)
-      .catch((e) => console.error('模板加载失败', e))
+      .catch((e) => {
+        console.error('模板加载失败', e)
+        showToast('云端连接超时，请稍后重试', 'error')
+      })
     loadGenerations(1)
   }, [ready]);
 
@@ -188,11 +194,11 @@ function Profile() {
             }}>
               <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: '8px', display: 'flex', justifyContent: 'space-between' }}>
                 <span>专属记忆槽位</span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--color-text-primary)' }}>{savedTemplates.length} / 4</span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--color-text-primary)' }}>{savedTemplates.length} / {slotLimit}</span>
               </div>
               <div style={{ display: 'flex', gap: '2px', background: 'rgba(0,0,0,0.05)', padding: '2px', borderRadius: '2px', boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.1)' }}>
-                {Array.from({ length: 4 }).map((_, i) => {
-                  const on = i < Math.min(savedTemplates.length, 4);
+                {Array.from({ length: slotLimit }).map((_, i) => {
+                  const on = i < Math.min(savedTemplates.length, slotLimit);
                   return (
                     <div key={i} style={{ height: '6px', flex: 1, background: on ? 'var(--color-accent-primary)' : 'rgba(0,0,0,0.1)', borderRadius: '1px', boxShadow: on ? '0 0 2px var(--color-accent-primary)' : 'none' }}></div>
                   );

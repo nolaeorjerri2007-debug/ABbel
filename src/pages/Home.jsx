@@ -5,6 +5,7 @@ import logo from '../assets/logo2.0.png'
 import { UserButton } from '@clerk/clerk-react'
 import { useAuthedSupabase } from '../lib/supabase'
 import { listTemplates, countGenerations } from '../lib/data'
+import { useQuota } from '../lib/quota-context'
 
 const SUGGESTION_CHIPS = [
   '💄 变身小红书爆文',
@@ -21,6 +22,7 @@ const MAX_REQUIREMENT = 200
 function Home() {
   const navigate = useNavigate()
   const { ready } = useAuthedSupabase()
+  const { slotLimit } = useQuota()
   const [originalText, setOriginalText] = useState('')
   const [requirement, setRequirement] = useState('')
   const [activeMenu, setActiveMenu] = useState('首页')
@@ -31,17 +33,24 @@ function Home() {
   const errorTimerRef = useRef(null)
   const [savedTemplates, setSavedTemplates] = useState([]);
   const [usageCount, setUsageCount] = useState(0);
+  const [toastMsg, setToastMsg] = useState(null);
+  const [toastType, setToastType] = useState('success');
 
   useEffect(() => {
     if (!ready) return
     listTemplates()
       .then(setSavedTemplates)
-      .catch((e) => console.error('模板加载失败', e))
+      .catch((e) => {
+        console.error('模板加载失败', e)
+        showToast('云端连接超时，请稍后重试', 'error')
+      })
     countGenerations()
       .then(setUsageCount)
-      .catch((e) => console.error('生成历史加载失败', e))
+      .catch((e) => {
+        console.error('生成历史加载失败', e)
+        showToast('云端连接超时，请稍后重试', 'error')
+      })
   }, [ready])
-
   useEffect(() => {
     // ================= ⚠️ 新增：双轨智能接站逻辑 =================
     const pendingInstruction = sessionStorage.getItem('pending_instruction');
@@ -98,6 +107,11 @@ function Home() {
       setErrorMsg('')
     }, 3000)
   }
+
+  const showToast = (msg, type = 'error') => {
+    setToastMsg(msg); setToastType(type);
+    setTimeout(() => setToastMsg(null), 3000);
+  };
 
   const handleGenerate = () => {
     if (!originalText.trim()) {
@@ -193,6 +207,19 @@ function Home() {
 
   return (
     <div className="main-panel">
+      {toastMsg && (
+        <div style={{
+          position: 'fixed', top: '24px', left: '50%', transform: 'translateX(-50%)',
+          background: 'rgba(30, 30, 30, 0.85)', backdropFilter: 'blur(8px)',
+          border: `1px solid ${toastType === 'success' ? 'rgba(102,255,136,0.4)' : 'rgba(255,100,100,0.4)'}`,
+          borderRadius: '6px', padding: '8px 16px', color: toastType === 'success' ? '#66FF88' : '#ff6b6b',
+          fontSize: '13px', fontWeight: '500', zIndex: 9999, display: 'flex', alignItems: 'center', gap: '8px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.2)', animation: 'fadeIn 0.2s ease-out'
+        }}>
+          <span style={{ display: 'inline-block', width: '6px', height: '6px', background: toastType === 'success' ? '#66FF88' : '#ff6b6b', borderRadius: '50%' }}></span>
+          {toastMsg}
+        </div>
+      )}
       <div className="screw"></div><div className="screw"></div>
       <div className="screw"></div><div className="screw"></div>
 
@@ -326,7 +353,7 @@ function Home() {
           <div className="status-box">
             <div style={{ fontSize: '10px', color: '#706D66', letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: '4px' }}>MEM_SLOTS</div>
             <div className="status-value" style={{ color: '#2C2A28', fontSize: '22px' }}>
-              {String(savedTemplates.length).padStart(2, '0')} / 04
+              {String(savedTemplates.length).padStart(2, '0')} / {String(slotLimit).padStart(2, '0')}
             </div>
           </div>
         </div>

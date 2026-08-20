@@ -63,7 +63,11 @@ export default async function handler(req, res) {
     // 余额枯竭，未扣费，直接拦截
     if (ok === 0) {
       await redis.disconnect();
-      return res.status(403).json({ error: '您的算力额度已耗尽，请升级 Pro 会员解锁无限算力！' });
+      return res.status(429).json({
+        error: '您的算力额度已耗尽，请购买点数包继续使用！',
+        code: 'QUOTA_EXHAUSTED',
+        remaining_balance: newBalance,
+      });
     }
 
     await redis.disconnect();

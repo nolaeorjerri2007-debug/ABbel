@@ -137,7 +137,7 @@ $$;
 grant execute on function public.sync_my_profile(text, text) to authenticated;
 
 -- =============================================================
--- 9. 记忆槽 4 上限：库层强制每个用户最多 4 个模板
+-- 9. 记忆槽上限：库层强制，按套餐区分（creator=10 槽，其余=4 槽）
 -- =============================================================
 create or replace function public.enforce_template_limit()
 returns trigger
@@ -145,9 +145,15 @@ language plpgsql
 security definer
 set search_path = public
 as $$
+declare
+  v_limit int;
 begin
-  if (select count(*) from public.templates where user_id = new.user_id) >= 4 then
-    raise exception '记忆槽已满（最多 4 个模板）';
+  select case when coalesce((select plan from public.users where id = new.user_id), 'free') = 'creator'
+         then 10 else 4 end
+  into v_limit;
+
+  if (select count(*) from public.templates where user_id = new.user_id) >= v_limit then
+    raise exception '记忆槽已满（最多 % 个模板）', v_limit;
   end if;
   return new;
 end;

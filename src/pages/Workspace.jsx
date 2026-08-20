@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import ExportModal from './ExportModal'
 import { useAuthedSupabase } from '../lib/supabase'
 import { listTemplates, createTemplate } from '../lib/data'
+import { useQuota } from '../lib/quota-context'
 
 const SLIDER_CONFIG = [
   {
@@ -39,6 +40,7 @@ function Workspace() {
   const { getToken } = useAuth()
   const navigate = useNavigate()
   const { ready } = useAuthedSupabase()
+  const { openUpgrade } = useQuota()
 
   const [draft, setDraft] = useState('')
   const [scores, setScores] = useState({})
@@ -73,7 +75,10 @@ function Workspace() {
     if (!ready) return
     listTemplates()
       .then(setSavedTemplates)
-      .catch((e) => console.error('模板加载失败', e))
+      .catch((e) => {
+        console.error('模板加载失败', e)
+        showToast('云端连接超时，请稍后重试', 'error')
+      })
   }, [ready])
 
   useEffect(() => {
@@ -162,9 +167,15 @@ function Workspace() {
       });
 
       // --- 处理余额不足或身份伪造的情况 ---
-      if (response.status === 401 || response.status === 403) {
+      if (response.status === 401) {
         const errData = await response.json();
         showToast(errData.error);
+        return null;
+      }
+      if (response.status === 429) {
+        const errData = await response.json().catch(() => ({}));
+        showToast(errData.error || '算力额度已耗尽');
+        openUpgrade();
         return null;
       }
       // ------------------------------------
@@ -375,9 +386,15 @@ function Workspace() {
       })
 
       // --- 处理余额不足或权限不足的情况 ---
-      if (response.status === 401 || response.status === 403) {
+      if (response.status === 401) {
         const errData = await response.json();
-        alert(errData.error); // 弹出报错信息
+        showToast(errData.error);
+        return;
+      }
+      if (response.status === 429) {
+        const errData = await response.json().catch(() => ({}));
+        showToast(errData.error || '算力额度已耗尽');
+        openUpgrade();
         return;
       }
       // ------------------------------------

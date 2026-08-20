@@ -8,7 +8,9 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test:concurrency": "node scripts/concurrency-test.js"
+    "test:concurrency": "node scripts/concurrency-test.js",
+    "test:migration": "node --experimental-test-module-mocks --test scripts/test-migration.mjs",
+    "test:webhook": "node scripts/test-lemon-webhook.mjs"
   },
   "dependencies": {
     "@clerk/backend": "^3.16.5",

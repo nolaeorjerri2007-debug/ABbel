@@ -3,12 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { useUser } from '@clerk/clerk-react';
 import { useAuthedSupabase } from '../lib/supabase';
 import { countGenerations } from '../lib/data';
+import { useQuota } from '../lib/quota-context';
 import './Settings.css';
 
 function Settings() {
   const navigate = useNavigate();
   const { user } = useUser();
   const { ready } = useAuthedSupabase();
+  const { openUpgrade } = useQuota();
   const displayName = user?.fullName || user?.username || user?.primaryEmailAddress?.emailAddress?.split('@')[0] || 'OPERATOR';
   const email = user?.primaryEmailAddress?.emailAddress || '';
   const [activeMenu, setActiveMenu] = useState('设置');
@@ -28,7 +30,10 @@ function Settings() {
     if (!ready) return
     countGenerations()
       .then(setUsageCount)
-      .catch((e) => console.error('历史加载失败', e))
+      .catch((e) => {
+        console.error('历史加载失败', e)
+        showToast('云端连接超时，请稍后重试', 'error')
+      })
   }, [ready]);
 
   const handleMenuClick = (item) => {
@@ -259,7 +264,7 @@ function Settings() {
                 </div>
                 <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>当前层级：工业版 (Industrial Tier)</span>
-                  <button className="btn-tool" style={{ color: 'var(--color-accent-primary)', borderColor: 'rgba(209, 62, 20, 0.3)' }} onClick={() => showToast('[QUOTA_SYS] 正在连接计费终端，获取最新升级方案...')}>升级配额限制</button>
+                  <button className="btn-tool" style={{ color: 'var(--color-accent-primary)', borderColor: 'rgba(209, 62, 20, 0.3)' }} onClick={() => openUpgrade()}>升级配额限制</button>
                 </div>
               </div>
             </div>
