@@ -2,8 +2,6 @@
 // 收银遮罩由 Lemon 官方渲染，100% 留在本站，无跳转。
 // 由于 CDN 脚本用 defer 加载，可能晚于 React 挂载，这里统一「等待就绪 + 确保 Setup」，
 // 避免「Setup 未注册 → Checkout.Success 丢失」和「Url.Open 时脚本未就绪」两类问题。
-import { STORE_SLUG } from './plans'
-
 let setupDone = false
 let handler = null
 let waitPromise = null
@@ -55,9 +53,9 @@ export async function openCheckout(variantId, userId) {
   if (!variantId) throw new Error('缺少 variant ID，请检查 .env 的 VITE_LS_VARIANT_*')
   const LS = await waitForLemon()
   ensureSetup(LS)
-  const base = `https://${STORE_SLUG}/checkout/buy/${variantId}`
-  const url = userId
-    ? `${base}?checkout[custom][user_id]=${encodeURIComponent(userId)}`
-    : base
-  LS.Url.Open(url)
+  // 手动拼接完整绝对 URL（官方域名 + 用户身份透传），确保 Lemon.js Overlay 能正确识别、不跳转。
+  const checkoutUrl = `https://abbel.lemonsqueezy.com/checkout/buy/${variantId}${
+    userId ? `?checkout[custom][user_id]=${encodeURIComponent(userId)}` : ''
+  }`
+  LS.Url.Open(checkoutUrl)
 }
