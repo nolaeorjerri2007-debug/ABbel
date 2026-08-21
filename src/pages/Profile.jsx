@@ -176,6 +176,14 @@ function Profile() {
                   {balance === null ? '加载中…' : `${balance} 次`}
                 </span>
               </div>
+              <div style={{ display: 'flex', gap: '2px', background: 'rgba(0,0,0,0.05)', padding: '2px', borderRadius: '2px', boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.1)' }}>
+                {Array.from({ length: 10 }).map((_, i) => {
+                  const on = i < Math.min(balance ?? 0, 10);
+                  return (
+                    <div key={i} style={{ height: '6px', flex: 1, background: on ? 'var(--color-accent-primary)' : 'rgba(0,0,0,0.1)', borderRadius: '1px', boxShadow: on ? '0 0 2px var(--color-accent-primary)' : 'none' }}></div>
+                  );
+                })}
+              </div>
             </div>
             
             <div style={{

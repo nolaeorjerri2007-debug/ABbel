@@ -51,6 +51,7 @@ export function QuotaProvider({ children }) {
   const [slotLimit, setSlotLimit] = useState(4)
 
   const purchasingRef = useRef(null) // 当前正在 Paddle 收银台支付的套餐
+  const prevBalanceRef = useRef(null) // 打开收银台前的余额快照，用于支付后判断是否到账
 
   const refreshBalance = useCallback(async () => {
     try {
@@ -62,6 +63,21 @@ export function QuotaProvider({ children }) {
       return null
     }
   }, [getToken])
+
+  // 支付成功后：webhook 异步到账，轮询余额直到达到目标（快照 + 本次点数），最多约 30s
+  const pollBalanceAfterPurchase = useCallback(async (prevBalance, expectedCredits) => {
+    const target = (prevBalance ?? 0) + expectedCredits
+    for (let i = 0; i < 15; i++) {
+      let b = null
+      try { b = await fetchBalance(getToken, 1) } catch (e) { /* 忽略单次失败 */ }
+      if (b !== null) {
+        setBalance(b)
+        if (b >= target) return b
+      }
+      await new Promise((r) => setTimeout(r, 2000))
+    }
+    return refreshBalance()
+  }, [getToken, refreshBalance])
 
   const refreshSlotLimit = useCallback(async () => {
     try {
@@ -93,6 +109,7 @@ export function QuotaProvider({ children }) {
       setCheckoutError(`套餐「${pkg.name}」的支付 ID 尚未配置，请回填 ${pkg.priceEnv}`)
       return false
     }
+    prevBalanceRef.current = balance
     purchasingRef.current = pkg
     setCheckoutError(null)
     try {
@@ -122,14 +139,15 @@ export function QuotaProvider({ children }) {
       onEvent: (event) => {
         if (event?.name !== 'checkout.completed') return
         const pkg = purchasingRef.current
-        setSuccessCredits(pkg ? pkg.credits : null)
+        const prev = prevBalanceRef.current
         purchasingRef.current = null
+        setSuccessCredits(pkg ? pkg.credits : null)
         setUpgradeOpen(false)
-        refreshBalance()
         refreshSlotLimit()
+        pollBalanceAfterPurchase(prev, pkg ? pkg.credits : 0)
       },
     })
-  }, [refreshBalance, refreshSlotLimit])
+  }, [refreshSlotLimit, pollBalanceAfterPurchase])
 
   return (
     <QuotaContext.Provider value={{

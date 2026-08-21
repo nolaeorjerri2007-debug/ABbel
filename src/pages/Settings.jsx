@@ -238,6 +238,14 @@ function Settings() {
                     {balance === null ? '加载中…' : `${balance} 次`}
                   </span>
                 </div>
+                <div style={{ display: 'flex', gap: '3px', background: 'rgba(0,0,0,0.06)', padding: '3px', borderRadius: '4px', boxShadow: 'var(--shadow-recess)', marginBottom: '16px' }}>
+                  {Array.from({ length: 10 }).map((_, i) => {
+                    const on = i < Math.min(balance ?? 0, 10);
+                    return (
+                      <div key={i} style={{ height: '10px', flex: 1, background: on ? 'var(--color-accent-primary)' : 'rgba(0,0,0,0.08)', borderRadius: '2px', boxShadow: on ? '0 0 4px var(--color-accent-primary)' : 'none' }}></div>
+                    );
+                  })}
+                </div>
                 <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>当前层级：{slotLimit >= 10 ? '创作者 (Creator)' : '免费版 (Free)'}</span>
                   <button className="btn-tool" style={{ color: 'var(--color-accent-primary)', borderColor: 'rgba(209, 62, 20, 0.3)' }} onClick={() => openUpgrade()}>升级配额限制</button>
