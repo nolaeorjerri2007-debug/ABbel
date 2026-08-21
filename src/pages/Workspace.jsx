@@ -40,7 +40,7 @@ function Workspace() {
   const { getToken } = useAuth()
   const navigate = useNavigate()
   const { ready } = useAuthedSupabase()
-  const { openUpgrade } = useQuota()
+  const { openUpgrade, refreshBalance } = useQuota()
 
   const [draft, setDraft] = useState('')
   const [scores, setScores] = useState({})
@@ -176,12 +176,14 @@ function Workspace() {
         const errData = await response.json().catch(() => ({}));
         showToast(errData.error || '算力额度已耗尽');
         openUpgrade();
+        refreshBalance(); // 余额归零，回刷配额
         return null;
       }
       // ------------------------------------
 
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
+      refreshBalance(); // 微调已消耗算力，立即回刷全局配额
 
       const rawText = data?.data?.outputs?.diff_text || data?.data?.outputs?.text || data?.answer || '';
 
@@ -395,6 +397,7 @@ function Workspace() {
         const errData = await response.json().catch(() => ({}));
         showToast(errData.error || '算力额度已耗尽');
         openUpgrade();
+        refreshBalance(); // 余额归零，回刷配额
         return;
       }
       // ------------------------------------
@@ -402,6 +405,7 @@ function Workspace() {
       if (!response.ok) throw new Error(`HTTP ${response.status}`)
 
       const data = await response.json()
+      refreshBalance() // 生成已消耗算力，立即回刷全局配额
       const outputs = data?.data?.outputs || {}
 
       // 兼容 Dify 输出字段名变化（text 可能被改成 draft/content/output/result 等）
