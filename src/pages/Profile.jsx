@@ -11,11 +11,10 @@ function Profile() {
   const navigate = useNavigate();
   const { ready } = useAuthedSupabase();
   const { user } = useUser();
-  const { slotLimit } = useQuota();
+  const { slotLimit, balance } = useQuota();
   const [activeMenu, setActiveMenu] = useState('我的');
   const [savedTemplates, setSavedTemplates] = useState([]);
   const [generations, setGenerations] = useState([]);
-  const [usageCount, setUsageCount] = useState(127);
   const [toastMsg, setToastMsg] = useState(null);
   const [toastType, setToastType] = useState('success');
   const [viewGen, setViewGen] = useState(null);
@@ -35,7 +34,6 @@ function Profile() {
       const { rows, count } = await listGenerationsPage({ from, to });
       setGenerations(rows);
       setGenerationTotal(count);
-      setUsageCount(count);
     } catch (e) {
       console.error('历史加载失败', e);
       showToast('云端连接超时，请稍后重试', 'error');
@@ -173,17 +171,10 @@ function Profile() {
               marginBottom: '16px'
             }}>
               <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: '8px', display: 'flex', justifyContent: 'space-between' }}>
-                <span>当月解压次数</span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--color-text-primary)' }}>{usageCount.toLocaleString()} / 5,000</span>
-              </div>
-              <div style={{ display: 'flex', gap: '2px', background: 'rgba(0,0,0,0.05)', padding: '2px', borderRadius: '2px', boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.1)' }}>
-                {Array.from({ length: 10 }).map((_, i) => {
-                  const filled = Math.round((usageCount / 5000) * 10);
-                  const on = i < filled;
-                  return (
-                    <div key={i} style={{ height: '6px', flex: 1, background: on ? 'var(--color-accent-primary)' : 'rgba(0,0,0,0.1)', borderRadius: '1px', boxShadow: on ? '0 0 2px var(--color-accent-primary)' : 'none' }}></div>
-                  );
-                })}
+                <span>剩余算力</span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
+                  {balance === null ? '加载中…' : `${balance} 次`}
+                </span>
               </div>
             </div>
             

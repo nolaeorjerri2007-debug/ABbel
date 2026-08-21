@@ -1,23 +1,19 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '@clerk/clerk-react';
-import { useAuthedSupabase } from '../lib/supabase';
-import { countGenerations } from '../lib/data';
 import { useQuota } from '../lib/quota-context';
 import './Settings.css';
 
 function Settings() {
   const navigate = useNavigate();
   const { user } = useUser();
-  const { ready } = useAuthedSupabase();
-  const { openUpgrade } = useQuota();
+  const { openUpgrade, balance, slotLimit } = useQuota();
   const displayName = user?.fullName || user?.username || user?.primaryEmailAddress?.emailAddress?.split('@')[0] || 'OPERATOR';
   const email = user?.primaryEmailAddress?.emailAddress || '';
   const [activeMenu, setActiveMenu] = useState('设置');
   const [activeSection, setActiveSection] = useState('section-account');
   const [toastMsg, setToastMsg] = useState(null);
   const [toastType, setToastType] = useState('success');
-  const [usageCount, setUsageCount] = useState(127);
 
   const mainContentRef = useRef(null);
 
@@ -25,16 +21,6 @@ function Settings() {
     setToastMsg(msg); setToastType(type);
     setTimeout(() => setToastMsg(null), 3000);
   };
-
-  useEffect(() => {
-    if (!ready) return
-    countGenerations()
-      .then(setUsageCount)
-      .catch((e) => {
-        console.error('历史加载失败', e)
-        showToast('云端连接超时，请稍后重试', 'error')
-      })
-  }, [ready]);
 
   const handleMenuClick = (item) => {
     setActiveMenu(item);
@@ -127,9 +113,6 @@ function Settings() {
       return next;
     });
   };
-
-  const quotaCells = 20;
-  const quotaFilled = Math.min(Math.round((usageCount / 5000) * quotaCells), quotaCells);
 
   return (
     <div className="workspace-page" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, padding: 0, margin: 0, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', overflow: 'hidden', width: '100vw', maxWidth: 'none' }}>
@@ -250,20 +233,13 @@ function Settings() {
 
               <div className="quota-display" style={{ background: 'var(--glass-module)', border: '1px solid var(--color-border-light)', padding: '24px', borderRadius: '8px', boxShadow: 'var(--shadow-emboss)', marginTop: '16px' }}>
                 <div className="quota-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                  <span className="quota-title" style={{ fontSize: '14px', fontWeight: 700, color: 'var(--color-text-primary)' }}>当月解压阵列使用量 (Requests)</span>
-                  <span className="quota-val" style={{ fontFamily: 'var(--font-mono)', fontSize: '16px', fontWeight: 900, color: 'var(--color-text-primary)' }}>{usageCount.toLocaleString()} / 5,000</span>
-                </div>
-                <div className="progress-bar-large" style={{ display: 'flex', gap: '3px', background: 'rgba(0,0,0,0.06)', padding: '3px', borderRadius: '4px', boxShadow: 'var(--shadow-recess)' }}>
-                  {Array.from({ length: quotaCells }).map((_, i) => (
-                    <div
-                      key={i}
-                      className={`progress-cell-lg ${i < quotaFilled ? (i >= quotaCells - 2 ? 'warn' : 'on') : ''}`}
-                      style={{ height: '10px', flex: 1, background: i < quotaFilled ? (i >= quotaCells - 2 ? 'var(--lcd-text-amber)' : 'var(--color-accent-primary)') : 'rgba(0,0,0,0.08)', borderRadius: '2px', boxShadow: i < quotaFilled ? `0 0 4px ${i >= quotaCells - 2 ? 'var(--lcd-text-amber)' : 'var(--color-accent-primary)'}` : 'none' }}
-                    />
-                  ))}
+                  <span className="quota-title" style={{ fontSize: '14px', fontWeight: 700, color: 'var(--color-text-primary)' }}>剩余算力 (Remaining)</span>
+                  <span className="quota-val" style={{ fontFamily: 'var(--font-mono)', fontSize: '16px', fontWeight: 900, color: 'var(--color-text-primary)' }}>
+                    {balance === null ? '加载中…' : `${balance} 次`}
+                  </span>
                 </div>
                 <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>当前层级：工业版 (Industrial Tier)</span>
+                  <span style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>当前层级：{slotLimit >= 10 ? '创作者 (Creator)' : '免费版 (Free)'}</span>
                   <button className="btn-tool" style={{ color: 'var(--color-accent-primary)', borderColor: 'rgba(209, 62, 20, 0.3)' }} onClick={() => openUpgrade()}>升级配额限制</button>
                 </div>
               </div>

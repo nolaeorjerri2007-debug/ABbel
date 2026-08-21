@@ -85,7 +85,7 @@ export function QuotaProvider({ children }) {
     setHighlightId(null)
   }, [])
 
-  const purchase = useCallback((pkgId) => {
+  const purchase = useCallback(async (pkgId) => {
     const pkg = PACKAGES.find((p) => p.id === pkgId)
     if (!pkg) return false
     const variantId = resolveVariantId(pkg)
@@ -96,10 +96,11 @@ export function QuotaProvider({ children }) {
     purchasingRef.current = pkg
     setCheckoutError(null)
     try {
-      openCheckout(variantId, user?.id || null)
+      await openCheckout(variantId, user?.id || null)
       return true
     } catch (e) {
       console.error('[lemon] 唤起收银台失败', e)
+      purchasingRef.current = null
       setCheckoutError(e?.message || '唤起收银台失败')
       return false
     }

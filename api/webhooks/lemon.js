@@ -49,6 +49,9 @@ export default async function handler(req, res) {
     const chunks = [];
     for await (const chunk of req) chunks.push(chunk);
     const rawBody = Buffer.concat(chunks).toString('utf8');
+    if (!rawBody) {
+      console.error('[lemon-webhook] 原始 body 为空：bodyParser:false 可能未生效');
+    }
 
     // 2. 验签：HMAC-SHA256(secret, rawBody) 与 X-Signature 恒定时间比对
     const secret = process.env.LEMON_SQUEEZY_WEBHOOK_SECRET;
@@ -63,6 +66,7 @@ export default async function handler(req, res) {
     const a = Buffer.from(String(signature));
     const b = Buffer.from(expected);
     if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+      console.error('[lemon-webhook] 签名校验失败', { 收到签名长度: a.length, 期望长度: b.length, body长度: rawBody.length });
       return res.status(401).json({ error: '签名校验失败' });
     }
 
