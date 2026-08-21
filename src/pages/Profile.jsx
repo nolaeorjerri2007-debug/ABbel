@@ -171,14 +171,15 @@ function Profile() {
               marginBottom: '16px'
             }}>
               <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: '8px', display: 'flex', justifyContent: 'space-between' }}>
-                <span>剩余算力</span>
+                <span>算力配额</span>
                 <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
-                  {balance === null ? '加载中…' : `${balance} 次`}
+                  {balance === null ? '加载中…' : (balance > 10 ? `剩余 ${balance} 次` : `已用 ${10 - balance} / 10`)}
                 </span>
               </div>
               <div style={{ display: 'flex', gap: '2px', background: 'rgba(0,0,0,0.05)', padding: '2px', borderRadius: '2px', boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.1)' }}>
                 {Array.from({ length: 10 }).map((_, i) => {
-                  const on = i < Math.min(balance ?? 0, 10);
+                  const filled = balance === null ? 0 : (balance > 10 ? 10 : 10 - balance);
+                  const on = i < filled;
                   return (
                     <div key={i} style={{ height: '6px', flex: 1, background: on ? 'var(--color-accent-primary)' : 'rgba(0,0,0,0.1)', borderRadius: '1px', boxShadow: on ? '0 0 2px var(--color-accent-primary)' : 'none' }}></div>
                   );
