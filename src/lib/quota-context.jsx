@@ -6,8 +6,8 @@ import { getMyPlan, slotLimitFor } from './data'
 
 const QuotaContext = createContext(null)
 
-// 从 /api/quota 拉取真实余额；webhook 异步到账，故带有限重试。
-async function fetchBalance(getToken, attempts = 5) {
+// 从 /api/quota 拉取真实算力（balance 剩余 / total 总量）；webhook 异步到账，故带有限重试。
+async function fetchQuota(getToken, attempts = 5) {
   let lastErr
   for (let i = 0; i < attempts; i++) {
     try {
@@ -15,7 +15,9 @@ async function fetchBalance(getToken, attempts = 5) {
       const res = await fetch('/api/quota', { headers: { Authorization: `Bearer ${token}` } })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
-      return data.remaining_balance
+      const balance = data.balance ?? data.remaining_balance ?? 0
+      const total = Math.max(data.total ?? 0, balance)
+      return { balance, total }
     } catch (e) {
       lastErr = e
       if (i < attempts - 1) await new Promise((r) => setTimeout(r, 1200 * (i + 1)))
@@ -44,6 +46,7 @@ export function QuotaProvider({ children }) {
   const { user } = useUser()
 
   const [balance, setBalance] = useState(null)
+  const [quotaTotal, setQuotaTotal] = useState(null)
   const [upgradeOpen, setUpgradeOpen] = useState(false)
   const [highlightId, setHighlightId] = useState(null)
   const [successCredits, setSuccessCredits] = useState(null)
@@ -55,9 +58,10 @@ export function QuotaProvider({ children }) {
 
   const refreshBalance = useCallback(async () => {
     try {
-      const b = await fetchBalance(getToken)
-      setBalance(b)
-      return b
+      const q = await fetchQuota(getToken)
+      setBalance(q.balance)
+      setQuotaTotal(q.total)
+      return q.balance
     } catch (e) {
       console.error('[quota] 拉取余额失败', e)
       return null
@@ -68,11 +72,12 @@ export function QuotaProvider({ children }) {
   const pollBalanceAfterPurchase = useCallback(async (prevBalance, expectedCredits) => {
     const target = (prevBalance ?? 0) + expectedCredits
     for (let i = 0; i < 15; i++) {
-      let b = null
-      try { b = await fetchBalance(getToken, 1) } catch (e) { /* 忽略单次失败 */ }
-      if (b !== null) {
-        setBalance(b)
-        if (b >= target) return b
+      let q = null
+      try { q = await fetchQuota(getToken, 1) } catch (e) { /* 忽略单次失败 */ }
+      if (q !== null) {
+        setBalance(q.balance)
+        setQuotaTotal(q.total)
+        if (q.balance >= target) return q.balance
       }
       await new Promise((r) => setTimeout(r, 2000))
     }
@@ -149,9 +154,13 @@ export function QuotaProvider({ children }) {
     })
   }, [refreshSlotLimit, pollBalanceAfterPurchase])
 
+  const used = balance === null || quotaTotal === null ? null : Math.max(0, quotaTotal - balance)
+
   return (
     <QuotaContext.Provider value={{
       balance,
+      total: quotaTotal,
+      used,
       slotLimit,
       refreshBalance,
       refreshSlotLimit,

@@ -7,7 +7,7 @@ import './Settings.css';
 function Settings() {
   const navigate = useNavigate();
   const { user } = useUser();
-  const { openUpgrade, balance, slotLimit } = useQuota();
+  const { openUpgrade, balance, total, used, slotLimit } = useQuota();
   const displayName = user?.fullName || user?.username || user?.primaryEmailAddress?.emailAddress?.split('@')[0] || 'OPERATOR';
   const email = user?.primaryEmailAddress?.emailAddress || '';
   const [activeMenu, setActiveMenu] = useState('设置');
@@ -235,13 +235,16 @@ function Settings() {
                 <div className="quota-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                   <span className="quota-title" style={{ fontSize: '14px', fontWeight: 700, color: 'var(--color-text-primary)' }}>算力配额 (Quota)</span>
                   <span className="quota-val" style={{ fontFamily: 'var(--font-mono)', fontSize: '16px', fontWeight: 900, color: 'var(--color-text-primary)' }}>
-                    {balance === null ? '加载中…' : (balance > 10 ? `剩余 ${balance} 次` : `已用 ${10 - balance} / 10`)}
+                    {balance === null ? '加载中…' : `${used} / ${total}`}
                   </span>
                 </div>
                 <div style={{ display: 'flex', gap: '3px', background: 'rgba(0,0,0,0.06)', padding: '3px', borderRadius: '4px', boxShadow: 'var(--shadow-recess)', marginBottom: '16px' }}>
                   {Array.from({ length: 10 }).map((_, i) => {
-                    const filled = balance === null ? 0 : (balance > 10 ? 10 : 10 - balance);
-                    const on = i < filled;
+                    const t = total ?? 0;
+                    const u = used ?? 0;
+                    let filled = t > 0 ? Math.round((u / t) * 10) : 0;
+                    if (u > 0 && filled === 0) filled = 1;
+                    const on = i < Math.min(10, filled);
                     return (
                       <div key={i} style={{ height: '10px', flex: 1, background: on ? 'var(--color-accent-primary)' : 'rgba(0,0,0,0.08)', borderRadius: '2px', boxShadow: on ? '0 0 4px var(--color-accent-primary)' : 'none' }}></div>
                     );

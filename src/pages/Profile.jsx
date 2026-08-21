@@ -11,7 +11,7 @@ function Profile() {
   const navigate = useNavigate();
   const { ready } = useAuthedSupabase();
   const { user } = useUser();
-  const { slotLimit, balance } = useQuota();
+  const { slotLimit, balance, total, used } = useQuota();
   const [activeMenu, setActiveMenu] = useState('我的');
   const [savedTemplates, setSavedTemplates] = useState([]);
   const [generations, setGenerations] = useState([]);
@@ -173,13 +173,16 @@ function Profile() {
               <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: '8px', display: 'flex', justifyContent: 'space-between' }}>
                 <span>算力配额</span>
                 <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--color-text-primary)' }}>
-                  {balance === null ? '加载中…' : (balance > 10 ? `剩余 ${balance} 次` : `已用 ${10 - balance} / 10`)}
+                  {balance === null ? '加载中…' : `${used} / ${total}`}
                 </span>
               </div>
               <div style={{ display: 'flex', gap: '2px', background: 'rgba(0,0,0,0.05)', padding: '2px', borderRadius: '2px', boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.1)' }}>
                 {Array.from({ length: 10 }).map((_, i) => {
-                  const filled = balance === null ? 0 : (balance > 10 ? 10 : 10 - balance);
-                  const on = i < filled;
+                  const t = total ?? 0;
+                  const u = used ?? 0;
+                  let filled = t > 0 ? Math.round((u / t) * 10) : 0;
+                  if (u > 0 && filled === 0) filled = 1;
+                  const on = i < Math.min(10, filled);
                   return (
                     <div key={i} style={{ height: '6px', flex: 1, background: on ? 'var(--color-accent-primary)' : 'rgba(0,0,0,0.1)', borderRadius: '1px', boxShadow: on ? '0 0 2px var(--color-accent-primary)' : 'none' }}></div>
                   );

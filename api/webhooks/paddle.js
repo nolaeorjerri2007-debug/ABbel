@@ -34,7 +34,27 @@ async function applyCredit({ key, userId, credits, plan, res }) {
     await redis.disconnect();
     return res.status(200).json({ received: true, duplicate: true });
   }
-  await redis.incrBy(userId, credits);
+
+  // 首次购买可能先于首次生成：确保免费额度已发放（balance 与 total 同时初始化）
+  const freeQuota = parseInt(process.env.FREE_QUOTA || '10', 10);
+  const balanceKey = userId;
+  const totalKey = `${userId}:total`;
+  const balanceExists = await redis.exists(balanceKey);
+  if (!balanceExists) {
+    await redis.set(balanceKey, freeQuota);
+    await redis.set(totalKey, freeQuota);
+  } else {
+    const totalExists = await redis.exists(totalKey);
+    if (!totalExists) {
+      // 旧数据：有 balance 无 total，用 max(当前余额, 免费额度) 兜底
+      const cur = parseInt(await redis.get(balanceKey) || '0', 10);
+      await redis.set(totalKey, Math.max(cur, freeQuota));
+    }
+  }
+
+  // 购买加额：balance 与 total 同时增加
+  await redis.incrBy(balanceKey, credits);
+  await redis.incrBy(totalKey, credits);
   await redis.disconnect();
 
   if (plan) await setUserPlan(userId, plan);

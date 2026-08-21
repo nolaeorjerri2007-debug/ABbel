@@ -87,6 +87,7 @@ async function main() {
   });
   check('transaction.completed：credited=100', ok.body?.credited === 100);
   check('订单余额 0→100', parseInt(await redis.get(orderUserId), 10) === 100);
+  check('订单 total=110（免费 10 + 100）', parseInt(await redis.get(`${orderUserId}:total`), 10) === 110);
   const okDup = await invoke({
     event_id: randomUUID(),
     event_type: 'transaction.completed',
@@ -115,6 +116,7 @@ async function main() {
   });
   check('subscription.activated：credited=300 + plan=creator', subOk.body?.credited === 300 && subOk.body?.plan === 'creator');
   check('订阅余额 0→300', parseInt(await redis.get(subUserId), 10) === 300);
+  check('订阅 total=310（免费 10 + 300）', parseInt(await redis.get(`${subUserId}:total`), 10) === 310);
   const subDup = await invoke({
     event_id: randomUUID(),
     event_type: 'subscription.activated',
@@ -148,6 +150,7 @@ async function main() {
   });
   check('续费：credited=300', renewOk.body?.credited === 300);
   check('续费后余额 300→600', parseInt(await redis.get(subUserId), 10) === 600);
+  check('续费后 total 310→610', parseInt(await redis.get(`${subUserId}:total`), 10) === 610);
   const renewDup = await invoke({
     event_id: randomUUID(),
     event_type: 'transaction.completed',
@@ -208,6 +211,7 @@ async function main() {
 
   // ===== 清理 =====
   await redis.del(orderUserId, subUserId);
+  await redis.del(`${orderUserId}:total`, `${subUserId}:total`);
   await redis.del(`paddle:processed:txn:${txnId}`);
   await redis.del(`paddle:processed:sub:${subId}`);
   await redis.del(`paddle:processed:txn:${renewTxnId}`);
