@@ -101,7 +101,7 @@ export default function CheckoutModal() {
             </div>
 
             <div style={{ fontSize: '11px', color: 'var(--color-text-secondary)', opacity: 0.7 }}>
-              * 支付由 Lemon Squeezy 收银台原地完成，无需跳转；支付成功自动到账。
+              * 支付由 Paddle 收银台原地完成，无需跳转；支付成功自动到账。
             </div>
           </div>
         </div>

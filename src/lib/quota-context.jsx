@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { useAuth, useUser } from '@clerk/clerk-react'
-import { initLemon, openCheckout } from './lemon'
-import { PACKAGES, resolveVariantId } from './plans'
+import { initPaddle, openCheckout } from './paddle'
+import { PACKAGES, resolvePriceId } from './plans'
 import { getMyPlan, slotLimitFor } from './data'
 
 const QuotaContext = createContext(null)
@@ -50,7 +50,7 @@ export function QuotaProvider({ children }) {
   const [checkoutError, setCheckoutError] = useState(null)
   const [slotLimit, setSlotLimit] = useState(4)
 
-  const purchasingRef = useRef(null) // 当前正在 Lemon 收银台支付的套餐
+  const purchasingRef = useRef(null) // 当前正在 Paddle 收银台支付的套餐
 
   const refreshBalance = useCallback(async () => {
     try {
@@ -88,18 +88,18 @@ export function QuotaProvider({ children }) {
   const purchase = useCallback(async (pkgId) => {
     const pkg = PACKAGES.find((p) => p.id === pkgId)
     if (!pkg) return false
-    const variantId = resolveVariantId(pkg)
-    if (!variantId) {
-      setCheckoutError(`套餐「${pkg.name}」的支付 ID 尚未配置，请回填 ${pkg.variantEnv}`)
+    const priceId = resolvePriceId(pkg)
+    if (!priceId) {
+      setCheckoutError(`套餐「${pkg.name}」的支付 ID 尚未配置，请回填 ${pkg.priceEnv}`)
       return false
     }
     purchasingRef.current = pkg
     setCheckoutError(null)
     try {
-      await openCheckout(variantId, user?.id || null)
+      await openCheckout(priceId, user?.id || null)
       return true
     } catch (e) {
-      console.error('[lemon] 唤起收银台失败', e)
+      console.error('[paddle] 唤起收银台失败', e)
       purchasingRef.current = null
       setCheckoutError(e?.message || '唤起收银台失败')
       return false
@@ -116,11 +116,11 @@ export function QuotaProvider({ children }) {
     }
   }, [user?.id, refreshBalance, refreshSlotLimit])
 
-  // 注册 Lemon.js 事件（仅一次）；Checkout.Success → 乐观成功动效 + 异步重载余额与槽位上限
+  // 注册 Paddle.js 事件（仅一次）；checkout.completed → 乐观成功动效 + 异步重载余额与槽位上限
   useEffect(() => {
-    initLemon({
+    initPaddle({
       onEvent: (event) => {
-        if (event?.event !== 'Checkout.Success') return
+        if (event?.name !== 'checkout.completed') return
         const pkg = purchasingRef.current
         setSuccessCredits(pkg ? pkg.credits : null)
         purchasingRef.current = null
