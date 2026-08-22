@@ -9,13 +9,16 @@ const LINKS = [
 
 export default function PublicFooter() {
   return (
-    <div className="public-footer-links">
-      {LINKS.map((item, i) => (
-        <span key={item.to} className="public-footer-item">
-          {i > 0 && <span className="public-footer-sep">|</span>}
-          <Link to={item.to} className="legal-link">{item.label}</Link>
-        </span>
-      ))}
-    </div>
+    <footer className="site-footer">
+      <nav className="site-footer-links">
+        {LINKS.map((item, i) => (
+          <span key={item.to} className="site-footer-item">
+            {i > 0 && <span className="site-footer-sep">|</span>}
+            <Link to={item.to} className="legal-link">{item.label}</Link>
+          </span>
+        ))}
+      </nav>
+      <span className="site-footer-copyright">2026 ABBEL / STRICTLY CONFIDENTIAL</span>
+    </footer>
   )
 }

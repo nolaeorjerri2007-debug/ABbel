@@ -212,10 +212,7 @@ export default function Login() {
         </div>
       </div>
 
-      <div className="login-bottom-bar">
-        <PublicFooter />
-        <span className="system-footer-text">2026 ABBEL / STRICTLY CONFIDENTIAL</span>
-      </div>
+      <PublicFooter />
     </div>
   );
 }

@@ -1,3 +1,5 @@
+import PublicFooter from '../components/PublicFooter'
+
 function Refunds() {
   return (
     <div className="legal-page">
@@ -16,6 +18,8 @@ function Refunds() {
           <p className="legal-para">如果您发生重复购买或严重的账单系统错误，且购买的算力完全未使用，您可以联系我们的支付服务商 Paddle 或我们的客服团队申请处理。</p>
           <p className="legal-para legal-en">In the event of a duplicate purchase or a critical billing system error, provided the purchased quotas remain completely unused, you may contact our payment provider Paddle or our support team for a resolution.</p>
         </section>
+
+        <PublicFooter />
       </div>
     </div>
   )

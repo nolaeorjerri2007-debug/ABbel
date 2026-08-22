@@ -2069,19 +2069,37 @@ details.drawer-details[open] > summary .summary-text-open { display: inline; }
   margin: 24px 0 0 0;
 }
 
-/* 公开底部导航（Pricing / Terms / Privacy / Refunds） */
-.public-footer-links {
+/* 全局站点页脚（SaaS 复用：导航靠左，版权靠右） */
+.site-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 48px;
+  padding-top: 20px;
+  border-top: 1px solid var(--color-border-dark);
+}
+.site-footer-links {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 10px;
 }
-.public-footer-item {
+.site-footer-item {
   display: inline-flex;
   align-items: center;
   gap: 10px;
 }
-.public-footer-sep {
+.site-footer-sep {
   color: var(--color-text-secondary);
   font-size: 12px;
+}
+.site-footer-copyright {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: rgba(0,0,0,0.3);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  white-space: nowrap;
 }

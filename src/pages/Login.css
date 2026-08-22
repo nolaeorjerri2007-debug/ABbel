@@ -155,22 +155,12 @@
 .abbel-login-wrapper .register-link { font-weight: 700; color: var(--color-text-primary); text-decoration: none; margin-left: 4px; padding: 4px 8px; background: rgba(255,255,255,0.4); border: 1px solid var(--color-border-dark); border-radius: 4px; box-shadow: var(--shadow-emboss); transition: all 0.2s; }
 .abbel-login-wrapper .register-link:hover { background: rgba(255,255,255,0.7); }
 .abbel-login-wrapper .register-link:active { box-shadow: var(--shadow-recess); transform: translateY(1px); }
-.abbel-login-wrapper .login-bottom-bar {
+.abbel-login-wrapper .site-footer {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  margin-top: 0;
   padding: 0 32px 24px;
-  gap: 16px;
-}
-.abbel-login-wrapper .system-footer-text {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: rgba(0,0,0,0.3);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  white-space: nowrap;
+  border-top: none;
 }
