@@ -1,5 +1,3 @@
-import PublicFooter from '../components/PublicFooter'
-
 function Privacy() {
   return (
     <div className="legal-page">
@@ -18,8 +16,6 @@ function Privacy() {
           <p className="legal-para">所有的支付交易均由我们的安全支付网关 Paddle.com 直接处理。Abbel 不会收集、保存或接触到您的任何信用卡或其他敏感财务信息。</p>
           <p className="legal-para legal-en">All payment transactions are processed securely and directly by our payment gateway, Paddle.com. Abbel does not collect, store, or have access to your credit card or other sensitive financial information.</p>
         </section>
-
-        <PublicFooter />
       </div>
     </div>
   )

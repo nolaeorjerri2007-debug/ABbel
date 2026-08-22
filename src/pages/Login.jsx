@@ -3,6 +3,7 @@ import { useSignIn } from '@clerk/clerk-react';
 import { SignUpButton } from '@clerk/clerk-react';
 import { useNavigate } from 'react-router-dom';
 import logo from '../assets/logo2.0.png'; 
+import PublicFooter from '../components/PublicFooter';
 import './Login.css';
 
 export default function Login() {
@@ -211,9 +212,9 @@ export default function Login() {
         </div>
       </div>
 
-      {/* ✅ 修复 4：更新页面底部说明文本 */}
-      <div className="system-footer-text">
-        2026 ABBEL / STRICTLY CONFIDENTIAL
+      <div className="login-bottom-bar">
+        <PublicFooter />
+        <span className="system-footer-text">2026 ABBEL / STRICTLY CONFIDENTIAL</span>
       </div>
     </div>
   );

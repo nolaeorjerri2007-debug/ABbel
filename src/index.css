@@ -2069,19 +2069,19 @@ details.drawer-details[open] > summary .summary-text-open { display: inline; }
   margin: 24px 0 0 0;
 }
 
-/* 公开页面底部导航（定价 / 条款 / 隐私 / 退款） */
-.public-footer {
+/* 公开底部导航（Pricing / Terms / Privacy / Refunds） */
+.public-footer-links {
   display: flex;
-  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.public-footer-item {
+  display: inline-flex;
   align-items: center;
   gap: 10px;
-  flex-wrap: wrap;
-  margin-top: 48px;
-  padding-top: 20px;
-  border-top: 1px solid var(--color-border-dark);
 }
 .public-footer-sep {
   color: var(--color-text-secondary);
   font-size: 12px;
-  margin: 0 2px;
 }

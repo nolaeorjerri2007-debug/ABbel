@@ -1,5 +1,3 @@
-import PublicFooter from '../components/PublicFooter'
-
 function Terms() {
   return (
     <div className="legal-page">
@@ -21,8 +19,6 @@ function Terms() {
           <p className="legal-para">您不得利用本服务生成违反法律法规的内容。</p>
           <p className="legal-para legal-en">You may not use this service to generate content that violates any laws or regulations.</p>
         </section>
-
-        <PublicFooter />
       </div>
     </div>
   )

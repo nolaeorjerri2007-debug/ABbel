@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom'
 import { PACKAGES } from '../lib/plans'
-import PublicFooter from '../components/PublicFooter'
 
 function Pricing() {
   return (
@@ -31,8 +30,6 @@ function Pricing() {
             登录后购买
           </Link>
         </div>
-
-        <PublicFooter />
       </div>
     </div>
   )
