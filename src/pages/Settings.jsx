@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useUser } from '@clerk/clerk-react';
 import { useQuota } from '../lib/quota-context';
 import './Settings.css';
@@ -403,6 +403,14 @@ function Settings() {
             <div style={{ display: 'flex', gap: '16px', marginTop: '64px', paddingTop: '24px', borderTop: '1px solid var(--color-border-dark)' }}>
               <button className="btn-primary" onClick={handleSaveConfig}>保存系统配置</button>
               <button className="btn-tool" onClick={handleResetConfig}>撤销更改</button>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginTop: '48px', paddingTop: '20px', borderTop: '1px solid var(--color-border-dark)' }}>
+              <Link to="/terms" className="legal-link">服务条款</Link>
+              <span style={{ color: 'var(--color-text-secondary)', fontSize: '12px' }}>|</span>
+              <Link to="/privacy" className="legal-link">隐私政策</Link>
+              <span style={{ color: 'var(--color-text-secondary)', fontSize: '12px' }}>|</span>
+              <Link to="/refunds" className="legal-link">退款政策</Link>
             </div>
           </div>
 

@@ -7,6 +7,9 @@ import TemplateLibrary from './pages/TemplateLibrary'
 import Profile from './pages/Profile'
 import Settings from './pages/Settings'
 import Login from './pages/Login'
+import Terms from './pages/Terms'
+import Privacy from './pages/Privacy'
+import Refunds from './pages/Refunds'
 import { useAuthedSupabase } from './lib/supabase'
 import { syncMyProfile } from './lib/data'
 import { migrateLegacyTemplates } from './lib/migration'
@@ -81,6 +84,11 @@ function App() {
       <Routes>
         {/* 登录页保持公开访问[cite: 4] */}
         <Route path="/login" element={<Login />} />
+
+        {/* 法律页面公开访问（Paddle 支付合规审核要求） */}
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/refunds" element={<Refunds />} />
 
         {/* 核心业务路由：通过 Clerk 守卫保护，未登录则自动重定向至登录页[cite: 4] */}
         <Route

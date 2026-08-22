@@ -1914,3 +1914,66 @@ details.drawer-details[open] > summary .summary-text-open { display: inline; }
 .template-card:hover .usage-count { opacity: 0; }
 .template-card:hover .btn-use { opacity: 1; transform: translateY(0); }
 .btn-use:active { transform: translateY(2px) !important; box-shadow: none; }
+
+/* ========================================
+   法律文档页面 (Terms / Privacy / Refunds)
+   ======================================== */
+.legal-page {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  overflow-y: auto;
+  background: var(--color-bg-body);
+  background-image:
+    radial-gradient(circle at 50% 0%, rgba(209, 62, 20, 0.03), transparent 50%),
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
+  padding: 48px 24px 80px;
+  box-sizing: border-box;
+  z-index: 100;
+}
+.legal-content {
+  max-width: 768px;
+  margin: 0 auto;
+}
+.legal-title {
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--color-text-title);
+  margin: 0 0 4px 0;
+  text-align: center;
+}
+.legal-subtitle {
+  font-size: 15px;
+  color: var(--color-text-secondary);
+  text-align: center;
+  margin: 0 0 40px 0;
+  font-family: var(--font-mono);
+}
+.legal-section {
+  margin-bottom: 32px;
+}
+.legal-heading {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0 0 12px 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--color-border-dark);
+}
+.legal-para {
+  font-size: 15px;
+  line-height: 1.9;
+  color: var(--color-text-primary);
+  margin: 0 0 12px 0;
+}
+.legal-para.legal-en {
+  color: var(--color-text-secondary);
+}
+.legal-link {
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.legal-link:hover {
+  color: var(--color-accent-primary);
+}
