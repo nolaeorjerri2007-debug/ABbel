@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useSignIn } from '@clerk/clerk-react';
 import { SignUpButton } from '@clerk/clerk-react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import logo from '../assets/logo2.0.png'; 
 import './Login.css';
 
@@ -214,10 +214,6 @@ export default function Login() {
       {/* ✅ 修复 4：更新页面底部说明文本 */}
       <div className="system-footer-text">
         2026 ABBEL / STRICTLY CONFIDENTIAL
-      </div>
-
-      <div style={{ textAlign: 'center', marginTop: '16px' }}>
-        <Link to="/pricing" className="legal-link">查看定价</Link>
       </div>
     </div>
   );
