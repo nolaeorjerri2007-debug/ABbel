@@ -4,7 +4,7 @@
 // 避免「Initialize 未执行 → checkout.completed 事件丢失」和「Checkout.open 时脚本未就绪」两类问题。
 
 const PADDLE_CLIENT_TOKEN = import.meta.env.VITE_PADDLE_CLIENT_TOKEN
-const PADDLE_ENVIRONMENT = import.meta.env.VITE_PADDLE_ENVIRONMENT || 'sandbox'
+const PADDLE_ENVIRONMENT = import.meta.env.VITE_PADDLE_ENVIRONMENT || 'production'
 
 let initialized = false
 let handler = null

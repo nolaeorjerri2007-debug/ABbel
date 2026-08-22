@@ -1,8 +1,8 @@
 import { createClient } from 'redis';
 import { verifyToken } from '@clerk/backend';
 import { generateSchema } from '../lib/schemas.js';
-import { deductQuota } from '../lib/quota.js';
-import { persistGeneration } from '../lib/generations.js';
+import { deductQuota, refundQuota } from '../lib/quota.js';
+import { persistGeneration, hasValidOutput } from '../lib/generations.js';
 
 export const maxDuration = 60; // 保持 60 秒续命补丁
 
@@ -57,45 +57,77 @@ export default async function handler(req, res) {
     const redis = createClient({ url: process.env.REDIS_URL });
     await redis.connect();
 
-    // 用用户真实 ID 作为 Key，一条 Lua 原子完成「首次发放 / 余额判断 / 自减」
-    const { ok, balance: newBalance } = await deductQuota(redis, userId, MAX_FREE_QUOTA);
+    try {
+      // 用用户真实 ID 作为 Key，一条 Lua 原子完成「首次发放 / 余额判断 / 自减」
+      const { ok, balance: newBalance } = await deductQuota(redis, userId, MAX_FREE_QUOTA);
 
-    // 余额枯竭，未扣费，直接拦截
-    if (ok === 0) {
-      await redis.disconnect();
-      return res.status(429).json({
-        error: '您的算力额度已耗尽，请购买点数包继续使用！',
-        code: 'QUOTA_EXHAUSTED',
-        remaining_balance: newBalance,
+      // 余额枯竭，未扣费，直接拦截
+      if (ok === 0) {
+        return res.status(429).json({
+          error: '您的算力额度已耗尽，请购买点数包继续使用！',
+          code: 'QUOTA_EXHAUSTED',
+          remaining_balance: newBalance,
+        });
+      }
+
+      // ==========================================
+      // 5. 余额扣除成功，放行调用 Dify（带 50s 超时，留出退款时间）
+      // ==========================================
+      let difyResponse;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 50000);
+      try {
+        difyResponse = await fetch('https://api.dify.ai/v1/workflows/run', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${process.env.DIFY_TOKEN_GENERATE}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ inputs, response_mode, user }),
+          signal: controller.signal,
+        });
+      } catch (e) {
+        // 网络错误 / 超时：上游没有真正产出，退还本次已扣额度
+        await refundQuota(redis, userId);
+        throw e;
+      } finally {
+        clearTimeout(timeoutId);
+      }
+
+      // 上游 API 报错（非 2xx）：同样退还已扣额度
+      if (!difyResponse.ok) {
+        await refundQuota(redis, userId);
+        const errData = await difyResponse.json().catch(() => ({}));
+        return res.status(502).json({
+          error: '上游生成服务暂时不可用，本次未扣费，请稍后重试',
+          details: errData?.message || `HTTP ${difyResponse.status}`,
+        });
+      }
+
+      const data = await difyResponse.json();
+
+      // 空输出（上游返回 200 但无有效文案）：同样退还已扣额度，不落库
+      if (!hasValidOutput('generate', data)) {
+        await refundQuota(redis, userId);
+        return res.status(502).json({
+          error: '上游生成服务返回空结果，本次未扣费，请稍后重试',
+          details: 'Dify 返回空输出',
+        });
+      }
+      
+      // 6. 扣费已成功、Dify 已返回 → 落库沉淀（失败不阻断返回）
+      await persistGeneration({
+        userId,
+        mode: 'generate',
+        inputText: inputs.input_text,
+        difyData: data,
       });
+
+      // 7. 将 Dify 的结果和最新的剩余额度一起返回给前端
+      res.status(200).json({ ...data, remaining_balance: newBalance });
+    } finally {
+      await redis.disconnect();
     }
-
-    await redis.disconnect();
-
-    // ==========================================
-    // 5. 余额扣除成功，放行调用 Dify
-    // ==========================================
-    const difyResponse = await fetch('https://api.dify.ai/v1/workflows/run', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.DIFY_TOKEN_GENERATE}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ inputs, response_mode, user })
-    });
-    
-    const data = await difyResponse.json();
-    
-    // 6. 扣费已成功、Dify 已返回 → 落库沉淀（失败不阻断返回）
-    await persistGeneration({
-      userId,
-      mode: 'generate',
-      inputText: inputs.input_text,
-      difyData: data,
-    });
-
-    // 7. 将 Dify 的结果和最新的剩余额度一起返回给前端
-    res.status(200).json({ ...data, remaining_balance: newBalance });
 
   } catch (error) {
     console.error('API Error:', error);
