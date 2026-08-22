@@ -1,0 +1,358 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+/* ========================================
+   公开首页 Landing —— 空间光影 / Neumorphism
+   ======================================== */
+.landing-page {
+  --color-bg-body: #ECE9E2;
+  --color-text-title: #111110;
+  --color-text-primary: #2C2A28;
+  --color-text-secondary: #706D66;
+  --color-accent-primary: #D13E14;
+  --font-sans: 'Noto Sans SC', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --lcd-bg: rgba(16, 19, 16, 0.96);
+  --lcd-text-bright: #66FF88;
+  --lcd-text-dim: #4B5E4B;
+  --lcd-text-amber: #FFB340;
+  --led-off: #2C2C2C;
+  --blur-intensity: blur(24px);
+
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--color-bg-body);
+  background-image:
+    radial-gradient(circle at 50% 50%, rgba(209, 62, 20, 0.05), transparent 60%),
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+  font-family: var(--font-sans);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  z-index: 9999;
+}
+.landing-page * { box-sizing: border-box; }
+
+/* 主体场景（Logo + 控制台，居中列） */
+.landing-scene {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 720px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+  padding: 0 24px;
+}
+
+.landing-logo {
+  height: 48px;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 8px 20px rgba(0,0,0,0.12));
+}
+
+/* 宽屏控制台 —— 无边框，边缘高光 + 弥散阴影塑造体积 */
+.landing-console {
+  width: 100%;
+  background: rgba(244, 241, 235, 0.55);
+  backdrop-filter: var(--blur-intensity);
+  -webkit-backdrop-filter: var(--blur-intensity);
+  border: none;
+  border-radius: 22px;
+  padding: 28px 32px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  box-shadow:
+    inset 1px 1px 2px rgba(255, 255, 255, 0.4),
+    inset -1px -1px 2px rgba(0, 0, 0, 0.04),
+    8px 24px 32px rgba(0, 0, 0, 0.15);
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.6s ease;
+}
+.landing-console.leaving {
+  transform: scale(0.9);
+  opacity: 0;
+}
+
+/* LCD 屏幕 —— 平滑凹陷的弧形凹槽 + 锁定时的环境辉光 */
+.landing-lcd {
+  position: relative;
+  background: var(--lcd-bg);
+  border: none;
+  border-radius: 18px;
+  padding: 28px 32px;
+  min-height: 180px;
+  overflow: hidden;
+  box-shadow:
+    inset 2px 3px 8px rgba(0, 0, 0, 0.6),
+    inset -1px -1px 2px rgba(255, 255, 255, 0.03),
+    0 1px 0 rgba(255, 255, 255, 0.5);
+  transition: box-shadow 0.5s ease;
+}
+.landing-lcd.locked {
+  box-shadow:
+    inset 2px 3px 8px rgba(0, 0, 0, 0.6),
+    inset -1px -1px 2px rgba(255, 255, 255, 0.03),
+    0 0 40px rgba(102, 255, 136, 0.12);
+}
+.landing-lcd::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255,255,255,0) 0px,
+    rgba(255,255,255,0) 2px,
+    rgba(0,0,0,0.26) 3px,
+    rgba(0,0,0,0) 4px
+  );
+  pointer-events: none;
+  z-index: 2;
+}
+.landing-lcd::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, rgba(102,255,136,0.06), transparent 70%);
+  pointer-events: none;
+  z-index: 3;
+  animation: landingFlicker 0.16s steps(2) infinite;
+}
+@keyframes landingFlicker {
+  0% { opacity: 0.8; }
+  50% { opacity: 1; }
+  100% { opacity: 0.8; }
+}
+
+.landing-lcd-header {
+  position: relative;
+  z-index: 4;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px dashed var(--lcd-text-dim);
+  padding-bottom: 10px;
+  margin-bottom: 18px;
+}
+.landing-lcd-title {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--lcd-text-amber);
+  letter-spacing: 0.14em;
+}
+.landing-lcd-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--lcd-text-dim);
+}
+.landing-lcd-status.locked { color: var(--lcd-text-bright); }
+.landing-led {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--led-off);
+}
+.landing-led.locked {
+  background: var(--lcd-text-bright);
+  box-shadow: 0 0 10px var(--lcd-text-bright);
+}
+
+.landing-lcd-body {
+  position: relative;
+  z-index: 4;
+  font-family: var(--font-mono);
+  line-height: 1.7;
+}
+.landing-lcd-dim {
+  color: var(--lcd-text-dim);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  margin-bottom: 12px;
+}
+.landing-lcd-text {
+  font-size: 18px;
+  letter-spacing: 0.08em;
+  color: var(--lcd-text-bright);
+  text-shadow: 0 0 6px rgba(102,255,136,0.35);
+  min-height: 1.7em;
+  word-break: break-all;
+}
+.landing-lcd-text.locked {
+  text-shadow: 0 0 12px rgba(102,255,136,0.7), 0 0 26px rgba(102,255,136,0.35);
+}
+
+/* 调频滑块 —— 平滑凹陷的极细轨道 + 悬浮胶囊光标 */
+.landing-tuner {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.landing-tuner-meta {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--color-text-secondary);
+}
+.landing-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 8px;
+  background: transparent;
+  border-radius: 8px;
+  outline: none;
+  cursor: pointer;
+}
+.landing-slider::-webkit-slider-runnable-track {
+  height: 8px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.05);
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.14),
+    inset 0 -1px 1px rgba(255, 255, 255, 0.6);
+}
+.landing-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 26px;
+  margin-top: -9px;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #FFFFFF 0%, #E9E6DE 100%);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.95),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.06),
+    0 3px 8px rgba(102, 255, 136, 0.35),
+    0 6px 16px rgba(0, 0, 0, 0.18);
+  cursor: grab;
+  transition: box-shadow 0.2s ease;
+}
+.landing-slider::-webkit-slider-thumb:hover {
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.95),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.06),
+    0 4px 12px rgba(102, 255, 136, 0.5),
+    0 8px 20px rgba(0, 0, 0, 0.2);
+}
+.landing-slider::-webkit-slider-thumb:active {
+  cursor: grabbing;
+}
+.landing-slider::-moz-range-track {
+  height: 8px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.05);
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.14),
+    inset 0 -1px 1px rgba(255, 255, 255, 0.6);
+}
+.landing-slider::-moz-range-thumb {
+  width: 14px;
+  height: 26px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #FFFFFF 0%, #E9E6DE 100%);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.95),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.06),
+    0 3px 8px rgba(102, 255, 136, 0.35),
+    0 6px 16px rgba(0, 0, 0, 0.18);
+  cursor: grab;
+}
+.landing-slider::-moz-range-progress {
+  height: 8px;
+  border-radius: 8px;
+  background: rgba(102, 255, 136, 0.28);
+}
+
+/* 解锁后渐现的红色大按钮 —— 无边框，多层阴影塑形 */
+.landing-enter {
+  width: 100%;
+  background: linear-gradient(180deg, #E04A1B 0%, #C03812 100%);
+  color: white;
+  border: none;
+  padding: 18px;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  cursor: pointer;
+  box-shadow:
+    inset 1px 1px 1px rgba(255, 255, 255, 0.25),
+    inset -1px -1px 2px rgba(0, 0, 0, 0.15),
+    0 2px 4px rgba(0, 0, 0, 0.12),
+    0 8px 20px rgba(209, 62, 20, 0.35);
+  animation: landingEnterIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes landingEnterIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.landing-enter:hover {
+  filter: brightness(1.05);
+  transform: translateY(-1px);
+  box-shadow:
+    inset 1px 1px 1px rgba(255, 255, 255, 0.25),
+    inset -1px -1px 2px rgba(0, 0, 0, 0.15),
+    0 4px 8px rgba(0, 0, 0, 0.14),
+    0 12px 28px rgba(209, 62, 20, 0.42);
+}
+.landing-enter:active {
+  transform: translateY(2px);
+  box-shadow:
+    inset 2px 3px 6px rgba(0, 0, 0, 0.3),
+    0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* 合规幽灵按钮 —— 无边框，柔和光影 */
+.landing-ghost {
+  position: absolute;
+  top: 24px;
+  right: 32px;
+  z-index: 20;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.25);
+  box-shadow:
+    inset 1px 1px 1px rgba(255, 255, 255, 0.5),
+    inset -1px -1px 2px rgba(0, 0, 0, 0.04),
+    0 4px 12px rgba(0, 0, 0, 0.06);
+  transition: all 0.2s;
+  opacity: 0.75;
+}
+.landing-ghost:hover {
+  opacity: 1;
+  color: var(--color-text-primary);
+  box-shadow:
+    inset 1px 1px 1px rgba(255, 255, 255, 0.5),
+    inset -1px -1px 2px rgba(0, 0, 0, 0.04),
+    0 6px 16px rgba(0, 0, 0, 0.1),
+    0 0 0 3px rgba(209, 62, 20, 0.08);
+}
+
+/* 底部页脚固定到视口底部 */
+.landing-page .site-footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin-top: 0;
+  padding: 0 32px 24px;
+  border-top: none;
+}

@@ -81,7 +81,7 @@ export default function Login() {
         
         setTimeout(async () => {
           await setActive({ session: result.createdSessionId });
-          navigate('/');
+          navigate('/home');
         }, 1500);
       } else {
         setLcdStatus('error');

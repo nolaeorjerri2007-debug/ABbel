@@ -98,7 +98,7 @@ function Profile() {
 
   const handleMenuClick = (item) => {
     setActiveMenu(item);
-    if (item === '首页') navigate('/');
+    if (item === '首页') navigate('/home');
     if (item === '工作台') navigate('/workspace');
     if (item === '模板库') navigate('/templates');
     if (item === '我的') navigate('/my');
@@ -220,7 +220,7 @@ function Profile() {
                   <span style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)', display: 'block', width: '4px', height: '18px', background: 'var(--color-accent-primary)', borderRadius: '2px' }}></span>
                   [MY TEMPLATES / 专属模板]
                 </div>
-                <button onClick={() => navigate('/')} style={{
+                <button onClick={() => navigate('/home')} style={{
                   background: 'var(--color-accent-primary)', color: 'white', border: 'none',
                   padding: '6px 16px', borderRadius: '4px', fontSize: '12px', fontWeight: 700,
                   cursor: 'pointer', boxShadow: '0 2px 6px rgba(209, 62, 20, 0.3)', transition: 'all 0.2s'

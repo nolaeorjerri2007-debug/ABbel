@@ -531,7 +531,7 @@ function Workspace() {
 
   const handleNavClick = (item) => {
     setActiveNav(item)
-    if (item === '首页') navigate('/')
+    if (item === '首页') navigate('/home')
     else if (item === '模板库') navigate('/templates')
     else if (item === '我的') navigate('/my')
     else if (item === '设置') navigate('/settings')

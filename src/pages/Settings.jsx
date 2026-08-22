@@ -24,7 +24,7 @@ function Settings() {
 
   const handleMenuClick = (item) => {
     setActiveMenu(item);
-    if (item === '首页') navigate('/');
+    if (item === '首页') navigate('/home');
     if (item === '工作台') navigate('/workspace');
     if (item === '模板库') navigate('/templates');
     if (item === '我的') navigate('/my');

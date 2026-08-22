@@ -77,7 +77,7 @@ function TemplateLibrary() {
 
   const handleMenuClick = (item) => {
     setActiveMenu(item);
-    if (item === '首页') navigate('/');
+    if (item === '首页') navigate('/home');
     if (item === '工作台') navigate('/workspace');
     if (item === '我的') navigate('/my');
     if (item === '设置') navigate('/settings');
